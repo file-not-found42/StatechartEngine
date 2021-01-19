@@ -1,21 +1,41 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class Transition
 {
-    Activity passthrough;
-    Condition cond;
-    SMEvent trigger;
+    public Activity passthrough;
+    public Condition cond;
+    public SCEvent trigger = null;
 
-    public State destination { get; internal set; }
+    public readonly State destination;
 
-    public bool Match(SMEvent e)
+
+    public Transition(State dest)
     {
-        return e.Type == trigger.Type && cond();
+        destination = dest;
     }
 
-    public void Traverse()
+
+    public bool Step(StatechartInstance instance, List<SCEvent> events)
     {
-        passthrough();
+        if (cond != null && !instance.CheckCondition(cond))
+            return false;
+
+        if (trigger == null)
+            return true;
+
+        foreach (SCEvent e in events)
+            if (trigger.Type == e.Type)
+                return true;
+
+        return false;
+    }
+
+
+    public void Traverse(StatechartInstance instance)
+    {
+        if (passthrough != null)
+            instance.DoActivity(passthrough);
     }
 }

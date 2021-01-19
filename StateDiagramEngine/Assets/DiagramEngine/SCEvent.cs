@@ -2,11 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SMEvent
+public class SCEvent
 {
     public readonly string Type;
 
-    public SMEvent(string newType)
+    public SCEvent(string newType)
     {
         Type = newType;
     }

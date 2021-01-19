@@ -1,18 +1,95 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
-public class Engine : MonoBehaviour
+public class StatechartEngine : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    static StatechartEngine instance = null;
+
+    readonly List<StatechartInstance> updateInstances = new List<StatechartInstance>();
+    readonly List<StatechartInstance> lateInstances = new List<StatechartInstance>();
+    readonly List<StatechartInstance> fixedInstances = new List<StatechartInstance>();
+    readonly List<StatechartInstance> guiInstances = new List<StatechartInstance>();
+
+
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    static StatechartEngine GetInstance()
     {
-        
+        if (instance == null)
+        {
+            GameObject obj = new GameObject();
+            DontDestroyOnLoad(obj);
+            instance = obj.AddComponent<StatechartEngine>();
+        }
+        return instance;
     }
 
-    // Update is called once per frame
+    
+    public static void AddInstance(StatechartInstance ins)
+    {
+        switch(ins.GetMode())
+        {
+            case Statechart.Mode.UPDATE:
+                GetInstance().updateInstances.Add(ins);
+                break;
+            case Statechart.Mode.LATE_UPDATE:
+                GetInstance().lateInstances.Add(ins);
+                break;
+            case Statechart.Mode.FIXED_UPDATE:
+                GetInstance().fixedInstances.Add(ins);
+                break;
+            case Statechart.Mode.ON_GUI:
+                GetInstance().guiInstances.Add(ins);
+                break;
+        }
+    }
+
+
+    public static void RemoveInstance(StatechartInstance ins)
+    {
+        switch (ins.GetMode())
+        {
+            case Statechart.Mode.UPDATE:
+                GetInstance().updateInstances.Remove(ins);
+                break;
+            case Statechart.Mode.LATE_UPDATE:
+                GetInstance().lateInstances.Remove(ins);
+                break;
+            case Statechart.Mode.FIXED_UPDATE:
+                GetInstance().fixedInstances.Remove(ins);
+                break;
+            case Statechart.Mode.ON_GUI:
+                GetInstance().guiInstances.Remove(ins);
+                break;
+        }
+    }
+
+
     void Update()
     {
-        
+        foreach (StatechartInstance i in updateInstances)
+            i.Step();
+    }
+
+
+    void LateUpdate()
+    {
+        foreach (StatechartInstance i in lateInstances)
+            i.Step();
+    }
+
+
+    void FixedUpdate()
+    {
+        foreach (StatechartInstance i in fixedInstances)
+            i.Step();
+    }
+
+
+    void OnGUI()
+    {
+        foreach (StatechartInstance i in guiInstances)
+            i.Step();
     }
 }

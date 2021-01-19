@@ -3,5 +3,11 @@ using System.Collections.Generic;
 
 public class Configuration
 {
-    List<State> atomicStates = new List<State>();
+    public State atomicState = null;
+
+
+    public override string ToString()
+    {
+        return atomicState.ToString();
+    }
 }

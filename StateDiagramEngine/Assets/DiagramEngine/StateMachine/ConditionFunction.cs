@@ -2,4 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-delegate bool Condition();
+public class Condition
+{
+    public string property;
+    public bool invert;
+}
