@@ -6,11 +6,10 @@ using UnityEngine;
 
 public class StatechartInstance : MonoBehaviour
 {
-    List<SCEvent> events = new List<SCEvent>();
-    List<SCEvent> newEvents = new List<SCEvent>();
-    
-    readonly Dictionary<string, ActivityFunction> activities = new Dictionary<string, ActivityFunction>();
-    readonly Dictionary<string, bool> conditions = new Dictionary<string, bool>();
+    readonly HashSet<SCEvent> events = new HashSet<SCEvent>();
+    readonly Dictionary<string, bool> properties = new Dictionary<string, bool>();
+
+    readonly Dictionary<string, ActionDelegate> activities = new Dictionary<string, ActionDelegate>();
 
     [SerializeField]
     Statechart machine;
@@ -38,65 +37,96 @@ public class StatechartInstance : MonoBehaviour
 
     public void Step()
     {
-        events = newEvents;
-        newEvents = new List<SCEvent>();
+        var snap = new Snapshot(config, properties, events);
+        events.Clear();
 
-        State source = config.atomicState;
+        var paths = new List<Path>();
 
-        Transition trans = source.Step(this, events);
-
-        if (trans == null)
+        foreach (AtomicState s in config.atomicState)
         {
-            source.Stay(this);
-            return;
+            Path p = new Path(s);
+            if (s.TryExit(p, snap))
+                paths.Add(p);
         }
 
-        State dest = trans.destination;
+        ISet<State> entered = new HashSet<State>();
+        ISet<State> exited = new HashSet<State>();
 
-        source.Exit(this);
-        trans.Traverse(this);
-        dest.Entry(this);
+        // Sort by scope high to low
+        paths.Sort();
 
-        config.atomicState = dest;
+        var valid_paths = new List<Path>();
 
-        Debug.Log(this + " is now in " + config.ToString());
+        // Remove conflicting paths by priority
+        foreach (var p in paths)
+        {
+            if (exited.Contains(p.GetSource()))
+                continue;
+
+            valid_paths.Add(p);
+            entered.UnionWith(p.GetEntered());
+            exited.UnionWith(p.GetExited());
+        }
+
+        // Execute EXIT actions
+        DoActivities((ICollection<object>)exited, Action.Type.EXIT);
+        // Execute STAY Actions
+        DoActivities((ICollection<object>)exited, Action.Type.STAY);
+        // Execute Passthrough
+        foreach (var p in valid_paths)
+            DoActivities((ICollection<object>)p.GetTransitions(), Action.Type.PASSTHROUGH);
+        // Execute ENTRY Actions
+        DoActivities((ICollection<object>)exited, Action.Type.ENTRY);
+
+        // Remove exited nodes from config
+        config.atomicState.ExceptWith((IEnumerable<AtomicState>)exited);
+        // Add entered nodes to config
+        config.atomicState.UnionWith((IEnumerable<AtomicState>)exited);
+
+        Debug.Log(this + " is now in " + config);
     }
 
 
-    public bool CheckCondition(Condition c)
+    public void DoActivities(ICollection<System.Object> objects, Action.Type type)
     {
-        return conditions[c.property];
-    }
-
-
-    public void DoActivity(Activity a)
-    {
-        activities.TryGetValue(a.text, out ActivityFunction act);
-        act();
+        foreach(var o in objects)
+            if(activities.TryGetValue(new Action(o.ToString(), type).ToString(), out ActionDelegate act))
+                act?.Invoke();
     }
 
     
     public void AddEvent(SCEvent e)
     {
-        newEvents.Add(e);
+        events.Add(e);
     }
 
 
-    public void Subscribe()
+    public void Subscribe(Action key, ActionDelegate f)
     {
-
+        if (activities.ContainsKey(key.ToString()))
+            activities[key.ToString()] += f;
+        else
+            activities[key.ToString()] = f;
     }
 
 
-    public void Unsubscribe()
+    public void Unsubscribe(Action key, ActionDelegate f)
     {
-
+        if (activities.ContainsKey(key.ToString()))
+            activities[key.ToString()] -= f;
     }
 
 
-    public void SetProperty()
+    public void SetProperty(string name, bool value)
     {
+        properties[name] = value;
+    }
 
+
+    public bool GetProperty(string name)
+    {
+        properties.TryGetValue(name, out bool value);
+        return value;
     }
 
 

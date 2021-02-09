@@ -6,44 +6,21 @@ public class TestScript_1 : MonoBehaviour
 {
     public bool manualCondition = false;
 
-
     StatechartInstance stateMachine = null;
 
 
     private void Start()
     {
         stateMachine = GetComponent<StatechartInstance>();
+
+        stateMachine.Subscribe(new Action("RA", Action.Type.STAY), new ActionDelegate(ActivityPrintA));
     }
 
 
     private void Update()
     {
-        if (Input.GetButtonDown("Fire1"))
-            stateMachine.Step();
-    }
-
-
-    public bool ConditionTrue()
-    {
-        return true;
-    }
-
-
-    public bool ConditionFalse()
-    {
-        return false;
-    }
-
-
-    public bool ConditionRandom()
-    {
-        return Random.value > 0.5f;
-    }
-
-
-    public bool ConditionManual()
-    {
-        return manualCondition;
+        //if (Input.GetButtonDown("Fire1"))
+        //    stateMachine.Step();
     }
 
 

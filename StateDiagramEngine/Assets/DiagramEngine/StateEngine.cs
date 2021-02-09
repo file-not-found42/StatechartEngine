@@ -7,10 +7,10 @@ public class StatechartEngine : MonoBehaviour
 {
     static StatechartEngine instance = null;
 
-    readonly List<StatechartInstance> updateInstances = new List<StatechartInstance>();
-    readonly List<StatechartInstance> lateInstances = new List<StatechartInstance>();
-    readonly List<StatechartInstance> fixedInstances = new List<StatechartInstance>();
-    readonly List<StatechartInstance> guiInstances = new List<StatechartInstance>();
+    readonly IList<StatechartInstance> updateInstances = new List<StatechartInstance>();
+    readonly IList<StatechartInstance> lateInstances = new List<StatechartInstance>();
+    readonly IList<StatechartInstance> fixedInstances = new List<StatechartInstance>();
+    readonly IList<StatechartInstance> guiInstances = new List<StatechartInstance>();
 
 
     [MethodImpl(MethodImplOptions.Synchronized)]

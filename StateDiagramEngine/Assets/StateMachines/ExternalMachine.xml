@@ -1,0 +1,34 @@
+<?scxml version="1.0" encoding="UTF-8" standalone="yes" xmlns="http://www.w3.org/2005/07/scxml"?>
+<state id="Root" initial="A">
+	<state id="A">
+	   <transition event="Event_1" cond="Property_1" target="B" priority="0"/>
+	</state>
+	
+	<state id="B">
+		<transition event="Event_1" target="A" priority="0"/>
+		<transition event="Event_2" target="C" priority="1"/>
+	</state>
+	
+	<parallel id="C">
+		<transition event="Event_2" target="B"/>
+		<state id="D" initial="E">
+			<state id="E">
+				<transition event="Event_1" target="F" priority="0"/>
+			</state>
+			
+			<state id="F">
+				<transition event="Event_1" target="E" priority="0"/>
+			</state>
+		</state>
+		
+		<state id="G" initial="H">
+			<state id="H">
+				<transition event="Event_1" cond="Property_1" target="I" priority="0"/>
+			</state>
+			
+			<state id="I">
+				<transition event="Event_1" target="H" priority="0"/>
+			</state>
+		</state>
+	</parallel>
+</state>

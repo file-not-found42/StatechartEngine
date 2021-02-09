@@ -2,8 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Condition
+public class ITransition
 {
-    public string property;
-    public bool invert;
 }

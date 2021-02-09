@@ -12,4 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec609290c0b3f0a4bb6a9eaeda73c233, type: 3}
   m_Name: Machine
   m_EditorClassIdentifier: 
+  scxml: {fileID: 4900000, guid: 16fbc304820641f429a2d6d5b117415c, type: 3}
   mode: 0
