@@ -13,13 +13,13 @@ public class TestScript_1 : MonoBehaviour
     {
         stateMachine = GetComponent<StatechartInstance>();
 
-        stateMachine.Subscribe("Root.B", Action.Type.ENTRY, ActivityPrintA);
+        stateMachine.Subscribe("Root.B", Action.Type.ENTRY, ActivityPrint);
     }
 
 
     void OnDestroy()
     {
-        stateMachine.Unsubscribe("Root.B", Action.Type.ENTRY, ActivityPrintA);
+        stateMachine.Unsubscribe("Root.B", Action.Type.ENTRY, ActivityPrint);
     }
 
 
@@ -35,14 +35,8 @@ public class TestScript_1 : MonoBehaviour
     }
 
 
-    public void ActivityPrintA(object sender, StateChartEventArgs args)
+    public void ActivityPrint(object sender, StateChartEventArgs args)
     {
-        Debug.Log("Activity A from " + name);
-    }
-
-    
-    public void ActivityPrintB(object sender, StateChartEventArgs args)
-    {
-        Debug.Log("Activity B from " + name);
+        Debug.Log(sender + " sent event to " + this + " from " + args.Source + " with type " + args.Type);
     }
 }

@@ -23,6 +23,15 @@ public abstract class Node : ISCElement
     public abstract bool TryEnter(Path path, Snapshot snap);
 
 
+    public bool IsChildOf(State state)
+    {
+        if (parent == null)
+            return this == state;
+
+        return this == state || parent.IsChildOf(state);
+    }
+    
+    
     public override string ToString()
     {
         return parent == null ? name : parent.ToString() + "." + name;

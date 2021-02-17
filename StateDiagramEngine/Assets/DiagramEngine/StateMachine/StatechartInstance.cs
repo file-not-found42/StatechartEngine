@@ -59,28 +59,33 @@ public class StatechartInstance : MonoBehaviour
         // Remove conflicting paths by priority
         foreach (var p in paths)
         {
-            if (exited.Contains(p.GetSource()))
-                continue;
+            bool valid = true;
+            foreach (var e in exited)
+            {
+                if (p.GetSource().IsChildOf(e))
+                {
+                    exited.UnionWith(p.GetSource().GetAncestors(e));
+                    valid = false;
+                    break;
+                }
+            }
 
-            valid_paths.Add(p);
-            entered.UnionWith(p.GetEntered());
-            exited.UnionWith(p.GetExited());
+            if (valid)
+            {
+                valid_paths.Add(p);
+                entered.UnionWith(p.GetEntered());
+                exited.UnionWith(p.GetExited());
+            }
         }
 
-        // Remove exited nodes from config
         config.atomicState.ExceptWith(ExtractAtomic(exited));
 
-        // Execute EXIT actions
         DoActions(exited, Action.Type.EXIT);
-        // Execute STAY actions
         DoActions(config.atomicState, Action.Type.STAY);
-        // Execute PASSTHROUGH
         foreach (var p in valid_paths)
             DoActions(p.GetWaymarks(), Action.Type.PASSTHROUGH);
-        // Execute ENTRY actions
         DoActions(entered, Action.Type.ENTRY);
 
-        // Add entered nodes to config
         config.atomicState.UnionWith(ExtractAtomic(entered));
 
         Debug.Log(this + " is now in " + config.ToString());
@@ -94,7 +99,7 @@ public class StatechartInstance : MonoBehaviour
         {
             var action = new Action(o.ToString(), type);
             if (actions.TryGetValue(action, out EventHandler<StateChartEventArgs> act))
-                act?.Invoke(this, new StateChartEventArgs());
+                act?.Invoke(this, new StateChartEventArgs(o.ToString(), type));
             sb.Append(action);
             sb.Append(", ");
         }
