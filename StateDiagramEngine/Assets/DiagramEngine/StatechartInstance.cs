@@ -10,15 +10,25 @@ public class StatechartInstance : MonoBehaviour
     readonly Dictionary<string, bool> properties = new Dictionary<string, bool>();
     readonly Dictionary<Action, EventHandler<SCEventArgs>> actions = new Dictionary<Action, EventHandler<SCEventArgs>>();
 
+    Configuration config;
+    
     [SerializeField]
     Statechart machine;
 
-    Configuration config;
+
+    public void Initialize(Statechart chart)
+    {
+        machine = chart;
+        Awake();
+    }
 
 
     void Awake()
     {
-        config = machine.Instantiate();
+        if (machine == null)
+            Debug.LogError(this + " does not have a statechart attached!");
+        else
+            config = machine.Instantiate();
     }
 
 
@@ -36,6 +46,10 @@ public class StatechartInstance : MonoBehaviour
 
     public void Step()
     {
+#if SC_PROFILE_SINGLE
+        var stopwatch = new System.Diagnostics.Stopwatch();
+        stopwatch.Start();
+#endif
         var snap = new Snapshot(config, properties, events);
         events.Clear();
 
@@ -88,24 +102,37 @@ public class StatechartInstance : MonoBehaviour
 
         config.atomicState.UnionWith(ExtractAtomic(entered));
 
+#if SC_PROFILE_SINGLE
+        stopwatch.Stop();
+        Debug.Log(stopwatch.ElapsedMilliseconds);
+#endif
+
+#if SC_LOG_FUNCTIONALITY
         Debug.Log(this + " is now in " + config.ToString());
+#endif
     }
 
 
     void DoActions(IEnumerable<ISCElement> objects, Action.Type type)
     {
+#if SC_LOG_FUNCTIONALITY
         var sb = new System.Text.StringBuilder();
+#endif
         foreach(var o in objects)
         {
             var action = new Action(o.ToString(), type);
             if (actions.TryGetValue(action, out EventHandler<SCEventArgs> act))
                 act?.Invoke(this, new SCEventArgs(o.ToString(), type));
+#if SC_LOG_FUNCTIONALITY
             sb.Append(action);
             sb.Append(", ");
+#endif
         }
 
+#if SC_LOG_FUNCTIONALITY
         if (sb.Length > 0)
             Debug.Log("Executed the following actions:\n" + sb.ToString());
+#endif
     }
 
 

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TestScript_1 : MonoBehaviour
+public class TestScript_Single : MonoBehaviour
 {
     StatechartInstance stateMachine = null;
 

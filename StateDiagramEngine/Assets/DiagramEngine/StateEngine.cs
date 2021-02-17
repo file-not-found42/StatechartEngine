@@ -12,6 +12,11 @@ public class StatechartEngine : MonoBehaviour
     readonly IList<StatechartInstance> fixedInstances = new List<StatechartInstance>();
     readonly IList<StatechartInstance> guiInstances = new List<StatechartInstance>();
 
+#if SC_PROFILE_UPDATE
+    float totalMS = 0;
+    long numFrames = 0;
+#endif
+
 
     [MethodImpl(MethodImplOptions.Synchronized)]
     static StatechartEngine GetInstance()
@@ -68,8 +73,20 @@ public class StatechartEngine : MonoBehaviour
 
     void Update()
     {
+#if SC_PROFILE_UPDATE
+        var stopwatch = new System.Diagnostics.Stopwatch();
+        stopwatch.Start();
+#endif
+
         foreach (StatechartInstance i in updateInstances)
             i.Step();
+
+#if SC_PROFILE_UPDATE
+        stopwatch.Stop();
+        totalMS += ProfilingUtility.PrintStopwatchMilliseconds(stopwatch);
+        numFrames++;
+        Debug.Log("Average " + totalMS / numFrames + " ms");
+#endif
     }
 
 
