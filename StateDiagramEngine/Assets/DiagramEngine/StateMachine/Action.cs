@@ -62,5 +62,3 @@ public class Action
         return (source.GetHashCode() << 2) + (int)type;
     }
 }
-
-public delegate void ActionDelegate();

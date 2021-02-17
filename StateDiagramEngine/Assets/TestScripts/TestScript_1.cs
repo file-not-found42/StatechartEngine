@@ -9,15 +9,21 @@ public class TestScript_1 : MonoBehaviour
     StatechartInstance stateMachine = null;
 
 
-    private void Start()
+    void Start()
     {
         stateMachine = GetComponent<StatechartInstance>();
 
-        stateMachine.Subscribe(new Action("Root.B", Action.Type.ENTRY), new ActionDelegate(ActivityPrintA));
+        stateMachine.Subscribe("Root.B", Action.Type.ENTRY, ActivityPrintA);
     }
 
 
-    private void Update()
+    void OnDestroy()
+    {
+        stateMachine.Unsubscribe("Root.B", Action.Type.ENTRY, ActivityPrintA);
+    }
+
+
+    void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
             stateMachine.Step();
@@ -29,13 +35,13 @@ public class TestScript_1 : MonoBehaviour
     }
 
 
-    public void ActivityPrintA()
+    public void ActivityPrintA(object sender, StateChartEventArgs args)
     {
         Debug.Log("Activity A from " + name);
     }
 
     
-    public void ActivityPrintB()
+    public void ActivityPrintB(object sender, StateChartEventArgs args)
     {
         Debug.Log("Activity B from " + name);
     }

@@ -8,7 +8,7 @@ public class StatechartInstance : MonoBehaviour
 {
     readonly HashSet<SCEvent> events = new HashSet<SCEvent>();
     readonly Dictionary<string, bool> properties = new Dictionary<string, bool>();
-    readonly Dictionary<Action, ActionDelegate> actions = new Dictionary<Action, ActionDelegate>();
+    readonly Dictionary<Action, EventHandler<StateChartEventArgs>> actions = new Dictionary<Action, EventHandler<StateChartEventArgs>>();
 
     [SerializeField]
     Statechart machine;
@@ -72,14 +72,13 @@ public class StatechartInstance : MonoBehaviour
 
         // Execute EXIT actions
         DoActions(exited, Action.Type.EXIT);
-        // Execute STAY Actions
-        // TODO
-        DoActions(exited, Action.Type.STAY);
-        // Execute Passthrough
+        // Execute STAY actions
+        DoActions(config.atomicState, Action.Type.STAY);
+        // Execute PASSTHROUGH
         foreach (var p in valid_paths)
             DoActions(p.GetWaymarks(), Action.Type.PASSTHROUGH);
-        // Execute ENTRY Actions
-        DoActions(exited, Action.Type.ENTRY);
+        // Execute ENTRY actions
+        DoActions(entered, Action.Type.ENTRY);
 
         // Add entered nodes to config
         config.atomicState.UnionWith(ExtractAtomic(entered));
@@ -90,9 +89,18 @@ public class StatechartInstance : MonoBehaviour
 
     void DoActions(IEnumerable<ISCElement> objects, Action.Type type)
     {
+        var sb = new System.Text.StringBuilder();
         foreach(var o in objects)
-            if(actions.TryGetValue(new Action(o.ToString(), type), out ActionDelegate act))
-                act?.Invoke();
+        {
+            var action = new Action(o.ToString(), type);
+            if (actions.TryGetValue(action, out EventHandler<StateChartEventArgs> act))
+                act?.Invoke(this, new StateChartEventArgs());
+            sb.Append(action);
+            sb.Append(", ");
+        }
+
+        if (sb.Length > 0)
+            Debug.Log("Executed the following actions:\n" + sb.ToString());
     }
 
 
@@ -117,19 +125,21 @@ public class StatechartInstance : MonoBehaviour
     }
 
 
-    public void Subscribe(Action key, ActionDelegate f)
+    public void Subscribe(string source, Action.Type type, EventHandler<StateChartEventArgs> function)
     {
+        var key = new Action(source, type);
         if (actions.ContainsKey(key))
-            actions[key] += f;
+            actions[key] += function;
         else
-            actions[key] = f;
+            actions[key] = function;
     }
 
 
-    public void Unsubscribe(Action key, ActionDelegate f)
+    public void Unsubscribe(string source, Action.Type type, EventHandler<StateChartEventArgs> function)
     {
+        var key = new Action(source, type);
         if (actions.ContainsKey(key))
-            actions[key] -= f;
+            actions[key] -= function;
     }
 
 

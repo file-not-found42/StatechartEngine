@@ -137,7 +137,7 @@ public class Statechart : ScriptableObject
             Node source = GetState(node.ParentNode.Attributes["id"].Value);
             Node target = GetState(node.Attributes["target"].Value);
 
-            Transition trans = new Transition(source.name + "->" + target.name, target)
+            Transition trans = new Transition(source.ToString() + "->" + target.ToString(), target)
             {
                 trigger = new SCEvent(node.Attributes["event"].Value)
             };
