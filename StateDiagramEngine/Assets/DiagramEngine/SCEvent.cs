@@ -2,9 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SCEvent : System.IEquatable<SCEvent>
+public class SCEvent
 {
     public readonly string Type;
+
 
     public SCEvent(string newType)
     {
@@ -12,8 +13,29 @@ public class SCEvent : System.IEquatable<SCEvent>
     }
 
 
-    public bool Equals(SCEvent other)
+    public override bool Equals(object other)
     {
-        return this.Type.Equals(other.Type);
+        if (other is SCEvent @event)
+            return Type == @event.Type;
+        else
+            return false;
+    }
+
+
+    public static bool operator ==(SCEvent a, SCEvent b)
+    {
+        return a.Equals(b);
+    }
+
+
+    public static bool operator !=(SCEvent a, SCEvent b)
+    {
+        return !a.Equals(b);
+    }
+
+
+    public override int GetHashCode()
+    {
+        return Type.GetHashCode();
     }
 }

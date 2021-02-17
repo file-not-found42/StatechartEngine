@@ -15,6 +15,7 @@ public class Action
     public readonly Type type;
     public readonly string source;
 
+
     public Action(string source, Type type)
     {
         this.source = source;
@@ -32,6 +33,33 @@ public class Action
             Type.PASSTHROUGH    => source + ":PASSTHROUGH",
             _                   => source + ":ERROR",
         };
+    }
+
+
+    public override bool Equals(object other)
+    {
+        if (other is Action action)
+            return source == action.source && type == action.type;
+        else
+            return false;
+    }
+
+
+    public static bool operator ==(Action a, Action b)
+    {
+        return a.Equals(b);
+    }
+
+
+    public static bool operator !=(Action a, Action b)
+    {
+        return !a.Equals(b);
+    }
+
+
+    public override int GetHashCode()
+    {
+        return (source.GetHashCode() << 2) + (int)type;
     }
 }
 

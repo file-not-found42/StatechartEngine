@@ -13,14 +13,19 @@ public class TestScript_1 : MonoBehaviour
     {
         stateMachine = GetComponent<StatechartInstance>();
 
-        stateMachine.Subscribe(new Action("RA", Action.Type.STAY), new ActionDelegate(ActivityPrintA));
+        stateMachine.Subscribe(new Action("Root.B", Action.Type.ENTRY), new ActionDelegate(ActivityPrintA));
     }
 
 
     private void Update()
     {
-        //if (Input.GetButtonDown("Fire1"))
-        //    stateMachine.Step();
+        if (Input.GetKeyDown(KeyCode.Space))
+            stateMachine.Step();
+
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+            stateMachine.AddEvent(new SCEvent("Event_1"));
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+            stateMachine.AddEvent(new SCEvent("Event_2"));
     }
 
 

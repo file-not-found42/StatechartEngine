@@ -7,6 +7,22 @@ public abstract class State : Node
     public State(string n) : base(n) {}
 
 
+    public abstract List<AtomicState> Enter();
+
+
+    public override bool TryEnter(Path path, Snapshot snap)
+    {
+        var states = Enter();
+
+        foreach (var s in states)
+        {
+            path.AddDestination(s);
+        }
+        
+        return true;
+    }
+
+
     public override bool TryExit(Path path, Snapshot snap)
     {
         if (parent != null && parent.TryExit(path, snap))
@@ -35,7 +51,7 @@ public abstract class State : Node
     }
 
 
-    public State GetCommonAncestor(ICollection<State> others)
+    public State GetCommonAncestor(IEnumerable<State> others)
     {
         var ancestry = GetAncestors(null);
         var scope = parent;

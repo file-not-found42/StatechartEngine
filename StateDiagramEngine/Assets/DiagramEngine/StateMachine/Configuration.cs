@@ -20,6 +20,15 @@ public class Configuration
 
     public override string ToString()
     {
-        return atomicState.ToString();
+        var sb = new System.Text.StringBuilder("[");
+        
+        foreach (var s in atomicState)
+        {
+            sb.Append(s.ToString());
+            sb.Append(", ");
+        }
+
+        sb.Append("]");
+        return sb.ToString();
     }
 }

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class Node : System.IEquatable<Node>
+public abstract class Node : ISCElement
 {
     public readonly string name;
     public State parent = null;
@@ -26,11 +26,5 @@ public abstract class Node : System.IEquatable<Node>
     public override string ToString()
     {
         return parent == null ? name : parent.ToString() + "." + name;
-    }
-
-
-    public bool Equals(Node other)
-    {
-        return this.name == other.name;
     }
 }

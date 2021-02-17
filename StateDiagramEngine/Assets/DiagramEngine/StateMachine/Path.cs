@@ -6,7 +6,7 @@ public class Path : System.IComparable<Path>
 {
     readonly AtomicState source;
     readonly ISet<AtomicState> destinations = new HashSet<AtomicState>();
-    readonly ICollection<Transition> transitions = new List<Transition>();
+    readonly ICollection<ISCElement> waymarks = new List<ISCElement>();
 
 
     public Path(AtomicState s)
@@ -17,7 +17,7 @@ public class Path : System.IComparable<Path>
 
     public ISet<State> GetEntered()
     {
-        var scope = source.GetCommonAncestor((ICollection<State>)destinations);
+        var scope = source.GetCommonAncestor(destinations);
         var entered = new HashSet<State>();
 
         foreach (var d in destinations)
@@ -30,7 +30,7 @@ public class Path : System.IComparable<Path>
 
     public ISet<State> GetExited()
     {
-        var scope = source.GetCommonAncestor((ICollection<State>)destinations);
+        var scope = source.GetCommonAncestor(destinations);
 
         return new HashSet<State>(source.GetAncestors(scope));
     }
@@ -38,8 +38,8 @@ public class Path : System.IComparable<Path>
 
     public int CompareTo(Path y)
     {
-        var scope = source.GetCommonAncestor((ICollection<State>)destinations);
-        var scopeY = y.source.GetCommonAncestor((ICollection<State>)y.destinations);
+        var scope = source.GetCommonAncestor(destinations);
+        var scopeY = y.source.GetCommonAncestor(y.destinations);
 
         var ances = scope.GetAncestors(null);
         var ancesY = scopeY.GetAncestors(null);
@@ -59,15 +59,15 @@ public class Path : System.IComparable<Path>
     }
 
 
-    public void AddTransition(Transition transition)
+    public void AddWaymark(ISCElement transition)
     {
-        transitions.Add(transition);
+        waymarks.Add(transition);
     }
 
 
-    public ICollection<Transition> GetTransitions()
+    public ICollection<ISCElement> GetWaymarks()
     {
-        return transitions;
+        return waymarks;
     }
 
 

@@ -30,16 +30,16 @@ public class StatechartEngine : MonoBehaviour
     {
         switch(ins.GetMode())
         {
-            case Statechart.Mode.UPDATE:
+            case Statechart.Mode.Unity_Update:
                 GetInstance().updateInstances.Add(ins);
                 break;
-            case Statechart.Mode.LATE_UPDATE:
+            case Statechart.Mode.Unity_Late_Update:
                 GetInstance().lateInstances.Add(ins);
                 break;
-            case Statechart.Mode.FIXED_UPDATE:
+            case Statechart.Mode.Unity_Fixed_Update:
                 GetInstance().fixedInstances.Add(ins);
                 break;
-            case Statechart.Mode.ON_GUI:
+            case Statechart.Mode.Unity_On_Gui:
                 GetInstance().guiInstances.Add(ins);
                 break;
         }
@@ -50,16 +50,16 @@ public class StatechartEngine : MonoBehaviour
     {
         switch (ins.GetMode())
         {
-            case Statechart.Mode.UPDATE:
+            case Statechart.Mode.Unity_Update:
                 GetInstance().updateInstances.Remove(ins);
                 break;
-            case Statechart.Mode.LATE_UPDATE:
+            case Statechart.Mode.Unity_Late_Update:
                 GetInstance().lateInstances.Remove(ins);
                 break;
-            case Statechart.Mode.FIXED_UPDATE:
+            case Statechart.Mode.Unity_Fixed_Update:
                 GetInstance().fixedInstances.Remove(ins);
                 break;
-            case Statechart.Mode.ON_GUI:
+            case Statechart.Mode.Unity_On_Gui:
                 GetInstance().guiInstances.Remove(ins);
                 break;
         }

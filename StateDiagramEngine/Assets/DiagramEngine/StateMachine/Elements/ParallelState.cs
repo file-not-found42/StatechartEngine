@@ -4,16 +4,19 @@ using UnityEngine;
 
 public class ParallelState : State
 {
-    public readonly List<CompoundState> regions = new List<CompoundState>();
+    public readonly List<State> regions = new List<State>();
 
 
     public ParallelState(string n) : base(n) { }
 
 
-    public override bool TryEnter(Path path, Snapshot snap)
+    public override List<AtomicState> Enter()
     {
-        foreach (CompoundState r in regions)
-            r.TryEnter(path, snap);
-        return true;
+        var result = new List<AtomicState>(regions.Count);
+
+        foreach (var r in regions)
+            result.AddRange(r.Enter());
+        
+        return result;
     }
 }

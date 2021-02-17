@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Transition
+public class Transition : ISCElement
 {
     public string name;
     public Condition cond;
@@ -20,12 +20,12 @@ public class Transition
 
     public bool Through(Path path, Snapshot snap)
     {
-        bool active = EvaluateCondition(snap) 
+        bool active = (cond == null || cond.Evaluate(snap))
             && (trigger == null || snap.ContainsEvent(trigger));
 
         if (active && destination.TryEnter(path, snap))
         {
-            path.AddTransition(this);
+            path.AddWaymark(this);
             return true;
         }
 
@@ -33,11 +33,8 @@ public class Transition
     }
 
 
-    bool EvaluateCondition(Snapshot snap)
+    public override string ToString()
     {
-        if (cond == null)
-            return true;
-
-        return snap.GetProperty(cond.property) ^ cond.invert;
+        return name;
     }
 }

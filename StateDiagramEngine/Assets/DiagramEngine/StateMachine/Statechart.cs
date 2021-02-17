@@ -8,24 +8,25 @@ public class Statechart : ScriptableObject
 {
     public enum Mode
     {
-        MANUAL,
-        UPDATE,
-        LATE_UPDATE,
-        FIXED_UPDATE,
-        ON_GUI
+        Manual,
+        On_Event,
+        Unity_Update,
+        Unity_Late_Update,
+        Unity_Fixed_Update,
+        Unity_On_Gui
     }
 
     [SerializeField]
     TextAsset scxml = null;
     [SerializeField]
-    Mode mode = Mode.MANUAL;
+    Mode mode = Mode.Manual;
 
     //[SerializeField]
     readonly List<Node> states = new List<Node>();
     //[SerializeField]
     readonly List<Transition> transitions = new List<Transition>();
     //[SerializeField]
-    CompoundState root = null;
+    State root = null;
 
     
     public Configuration Instantiate()
@@ -35,17 +36,17 @@ public class Statechart : ScriptableObject
             XmlDocument doc = new XmlDocument();
             doc.LoadXml(scxml.text);
 
-            ReadXMLNode(doc);
+            ParseStates(doc.LastChild);
+            ParseTransitions(doc.LastChild);
         }
         
-        // TODO
         Configuration config = new Configuration();
-        //config.atomicState.Add(root.entryChild);
+        config.atomicState.UnionWith(root.Enter());
         return config;
     }
 
 
-    void ReadXMLNode(XmlNode node)
+    void ParseStates(XmlNode node)
     {
         if (node.Name == "state")
         {
@@ -59,31 +60,34 @@ public class Statechart : ScriptableObject
             // Create the new state
             State state;
             if (isAtomic)
-                state = new AtomicState(node.Attributes.GetNamedItem("id").Value);
+                state = new AtomicState(node.Attributes["id"].Value);
             else
-                state = new CompoundState(node.Attributes.GetNamedItem("id").Value);
-
-            state.parent = GetState(node.ParentNode.Attributes.GetNamedItem("id").Value);
+                state = new CompoundState(node.Attributes["id"].Value);
             
+            if (root == null)
+                root = state;
+            else
+                state.parent = GetState(node.ParentNode.Attributes["id"].Value);
+
             states.Add(state);
 
             // Recursion
             if (node.HasChildNodes)
                 foreach (XmlNode n in node.ChildNodes)
-                    ReadXMLNode(n);
+                    ParseStates(n);
 
             // Set the entry state for a compound state
             if (!isAtomic)
             {
-                string entryState = node.Attributes.GetNamedItem("initial").Value;
+                string entryState = node.Attributes["initial"].Value;
                 ((CompoundState)state).entryChild = GetState(entryState);
             }
         }
         else if (node.Name == "parallel")
         {
-            ParallelState state = new ParallelState(node.Attributes.GetNamedItem("id").Value)
+            ParallelState state = new ParallelState(node.Attributes["id"].Value)
             {
-                parent = GetState(node.ParentNode.Attributes.GetNamedItem("id").Value)
+                parent = GetState(node.ParentNode.Attributes["id"].Value)
             };
 
             states.Add(state);
@@ -91,40 +95,57 @@ public class Statechart : ScriptableObject
             if (node.HasChildNodes)
             {
                 foreach (XmlNode n in node.ChildNodes)
-                    ReadXMLNode(n);
+                    ParseStates(n);
 
                 foreach (XmlNode n in node.ChildNodes)
                 {
-                    string region = n.Attributes.GetNamedItem("id").Value;
+                    if (n.Name == "transition")
+                        continue;
+
+                    string region = n.Attributes["id"].Value;
                     state.regions.Add((CompoundState)GetState(region));
                 }
             }
 
         }
         else if (node.Name == "transition")
-        {
-            Node source = GetState(node.ParentNode.Attributes.GetNamedItem("id").Value);
-            Node target = GetState(node.ParentNode.Attributes.GetNamedItem("target").Value);
-
-            source.outTransitions.Add(
-                int.Parse(node.ParentNode.Attributes.GetNamedItem("cond").Value), 
-                new Transition(source.name + "->" + target.name, target)
-                {
-                    trigger = new SCEvent(node.ParentNode.Attributes.GetNamedItem("event").Value),
-                    cond = new Condition(node.ParentNode.Attributes.GetNamedItem("cond").Value)
-                }
-            );
-
-        }
-        else if (node.Name == "#document")
-        {
-            foreach (XmlNode n in node.ChildNodes)
-                ReadXMLNode(n);
-        }
-        else if (node.Name == "scxml") { } // Ignore
+        { } // Do nothing for now
         else
         {
             Debug.LogError("Error: Unsupported XML name in statechart document: \"" + node.Name + "\"");
+        }
+    }
+
+
+    public void ParseTransitions(XmlNode node)
+    {
+        if (node.Name == "state" || node.Name == "parallel")
+        {
+            if (node.HasChildNodes)
+                foreach (XmlNode n in node.ChildNodes)
+                    ParseTransitions(n);
+        }
+        else if (node.Name == "transition")
+        {
+            if (node.Attributes["priority"] == null)
+                Debug.LogError("Error: Missing priority in transition in " + scxml.name);
+            if (node.Attributes["target"] == null)
+                Debug.LogError("Error: Missing target in transition in " + scxml.name);
+            if (node.Attributes["event"] == null)
+                Debug.LogError("Error: Missing trigger in transition in " + scxml.name);
+
+            Node source = GetState(node.ParentNode.Attributes["id"].Value);
+            Node target = GetState(node.Attributes["target"].Value);
+
+            Transition trans = new Transition(source.name + "->" + target.name, target)
+            {
+                trigger = new SCEvent(node.Attributes["event"].Value)
+            };
+
+            if (node.Attributes["cond"] != null)
+                trans.cond = new Condition(node.Attributes["cond"].Value);
+
+            source.outTransitions.Add(int.Parse(node.Attributes["priority"].Value), trans);
         }
     }
 

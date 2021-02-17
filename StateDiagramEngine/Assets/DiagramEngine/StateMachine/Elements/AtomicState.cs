@@ -7,9 +7,8 @@ public class AtomicState : State
     public AtomicState(string n) : base(n) { }
 
 
-    public override bool TryEnter(Path path, Snapshot snap)
+    public override List<AtomicState> Enter()
     {
-        path.AddDestination(this);
-        return true;
+        return new List<AtomicState>() { this };
     }
 }

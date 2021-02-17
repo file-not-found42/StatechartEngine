@@ -17,7 +17,10 @@ public class PseudoState : Node
     {
         foreach (Transition t in outTransitions.Values)
             if (t.Through(path, snap))
+            {
+                path.AddWaymark(this);
                 return true;
+            }
         return false;
     }
 }

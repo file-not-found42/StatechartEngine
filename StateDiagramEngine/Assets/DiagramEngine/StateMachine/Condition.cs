@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class Condition
 {
-    public string property;
-    public bool invert;
+    readonly string property;
+    readonly bool invert = false;
 
 
     public Condition(string prop, bool inv)
@@ -17,6 +17,18 @@ public class Condition
 
     public Condition(string expression)
     {
+        property = expression;
+    }
 
+
+    public bool Evaluate(Snapshot snap)
+    {
+        return snap.GetProperty(property) ^ invert;
+    }
+
+
+    public bool isEmpty()
+    {
+        return property == null || property == "";
     }
 }

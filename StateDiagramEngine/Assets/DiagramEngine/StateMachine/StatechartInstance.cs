@@ -8,8 +8,7 @@ public class StatechartInstance : MonoBehaviour
 {
     readonly HashSet<SCEvent> events = new HashSet<SCEvent>();
     readonly Dictionary<string, bool> properties = new Dictionary<string, bool>();
-
-    readonly Dictionary<string, ActionDelegate> activities = new Dictionary<string, ActionDelegate>();
+    readonly Dictionary<Action, ActionDelegate> actions = new Dictionary<Action, ActionDelegate>();
 
     [SerializeField]
     Statechart machine;
@@ -49,8 +48,8 @@ public class StatechartInstance : MonoBehaviour
                 paths.Add(p);
         }
 
-        ISet<State> entered = new HashSet<State>();
-        ISet<State> exited = new HashSet<State>();
+        HashSet<State> entered = new HashSet<State>();
+        HashSet<State> exited = new HashSet<State>();
 
         // Sort by scope high to low
         paths.Sort();
@@ -68,52 +67,69 @@ public class StatechartInstance : MonoBehaviour
             exited.UnionWith(p.GetExited());
         }
 
+        // Remove exited nodes from config
+        config.atomicState.ExceptWith(ExtractAtomic(exited));
+
         // Execute EXIT actions
-        DoActivities((ICollection<object>)exited, Action.Type.EXIT);
+        DoActions(exited, Action.Type.EXIT);
         // Execute STAY Actions
-        DoActivities((ICollection<object>)exited, Action.Type.STAY);
+        // TODO
+        DoActions(exited, Action.Type.STAY);
         // Execute Passthrough
         foreach (var p in valid_paths)
-            DoActivities((ICollection<object>)p.GetTransitions(), Action.Type.PASSTHROUGH);
+            DoActions(p.GetWaymarks(), Action.Type.PASSTHROUGH);
         // Execute ENTRY Actions
-        DoActivities((ICollection<object>)exited, Action.Type.ENTRY);
+        DoActions(exited, Action.Type.ENTRY);
 
-        // Remove exited nodes from config
-        config.atomicState.ExceptWith((IEnumerable<AtomicState>)exited);
         // Add entered nodes to config
-        config.atomicState.UnionWith((IEnumerable<AtomicState>)exited);
+        config.atomicState.UnionWith(ExtractAtomic(entered));
 
-        Debug.Log(this + " is now in " + config);
+        Debug.Log(this + " is now in " + config.ToString());
     }
 
 
-    public void DoActivities(ICollection<System.Object> objects, Action.Type type)
+    void DoActions(IEnumerable<ISCElement> objects, Action.Type type)
     {
         foreach(var o in objects)
-            if(activities.TryGetValue(new Action(o.ToString(), type).ToString(), out ActionDelegate act))
+            if(actions.TryGetValue(new Action(o.ToString(), type), out ActionDelegate act))
                 act?.Invoke();
+    }
+
+
+    HashSet<AtomicState> ExtractAtomic(ISet<State> source)
+    {
+        var result = new HashSet<AtomicState>();
+
+        foreach (var s in source)
+            if (s is AtomicState a)
+                result.Add(a);
+
+        return result;
     }
 
     
     public void AddEvent(SCEvent e)
     {
         events.Add(e);
+
+        if (machine.GetMode() == Statechart.Mode.On_Event)
+            Step();
     }
 
 
     public void Subscribe(Action key, ActionDelegate f)
     {
-        if (activities.ContainsKey(key.ToString()))
-            activities[key.ToString()] += f;
+        if (actions.ContainsKey(key))
+            actions[key] += f;
         else
-            activities[key.ToString()] = f;
+            actions[key] = f;
     }
 
 
     public void Unsubscribe(Action key, ActionDelegate f)
     {
-        if (activities.ContainsKey(key.ToString()))
-            activities[key.ToString()] -= f;
+        if (actions.ContainsKey(key))
+            actions[key] -= f;
     }
 
 
