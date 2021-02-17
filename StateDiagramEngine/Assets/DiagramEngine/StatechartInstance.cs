@@ -6,9 +6,9 @@ using UnityEngine;
 
 public class StatechartInstance : MonoBehaviour
 {
-    readonly HashSet<SCEvent> events = new HashSet<SCEvent>();
+    readonly HashSet<SCInternalEvent> events = new HashSet<SCInternalEvent>();
     readonly Dictionary<string, bool> properties = new Dictionary<string, bool>();
-    readonly Dictionary<Action, EventHandler<StateChartEventArgs>> actions = new Dictionary<Action, EventHandler<StateChartEventArgs>>();
+    readonly Dictionary<Action, EventHandler<SCEventArgs>> actions = new Dictionary<Action, EventHandler<SCEventArgs>>();
 
     [SerializeField]
     Statechart machine;
@@ -98,8 +98,8 @@ public class StatechartInstance : MonoBehaviour
         foreach(var o in objects)
         {
             var action = new Action(o.ToString(), type);
-            if (actions.TryGetValue(action, out EventHandler<StateChartEventArgs> act))
-                act?.Invoke(this, new StateChartEventArgs(o.ToString(), type));
+            if (actions.TryGetValue(action, out EventHandler<SCEventArgs> act))
+                act?.Invoke(this, new SCEventArgs(o.ToString(), type));
             sb.Append(action);
             sb.Append(", ");
         }
@@ -121,7 +121,7 @@ public class StatechartInstance : MonoBehaviour
     }
 
     
-    public void AddEvent(SCEvent e)
+    public void AddEvent(SCInternalEvent e)
     {
         events.Add(e);
 
@@ -130,7 +130,7 @@ public class StatechartInstance : MonoBehaviour
     }
 
 
-    public void Subscribe(string source, Action.Type type, EventHandler<StateChartEventArgs> function)
+    public void Subscribe(string source, Action.Type type, EventHandler<SCEventArgs> function)
     {
         var key = new Action(source, type);
         if (actions.ContainsKey(key))
@@ -140,7 +140,7 @@ public class StatechartInstance : MonoBehaviour
     }
 
 
-    public void Unsubscribe(string source, Action.Type type, EventHandler<StateChartEventArgs> function)
+    public void Unsubscribe(string source, Action.Type type, EventHandler<SCEventArgs> function)
     {
         var key = new Action(source, type);
         if (actions.ContainsKey(key))

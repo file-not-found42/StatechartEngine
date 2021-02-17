@@ -6,7 +6,7 @@ public class Transition : ISCElement
 {
     public string name;
     public Condition cond;
-    public SCEvent trigger = null;
+    public SCInternalEvent trigger = null;
 
     public readonly Node destination;
 

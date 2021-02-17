@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class TestScript_1 : MonoBehaviour
 {
-    public bool manualCondition = false;
-
     StatechartInstance stateMachine = null;
 
 
@@ -29,13 +27,13 @@ public class TestScript_1 : MonoBehaviour
             stateMachine.Step();
 
         if (Input.GetKeyDown(KeyCode.Alpha1))
-            stateMachine.AddEvent(new SCEvent("Event_1"));
+            stateMachine.AddEvent(new SCInternalEvent("Event_1"));
         if (Input.GetKeyDown(KeyCode.Alpha2))
-            stateMachine.AddEvent(new SCEvent("Event_2"));
+            stateMachine.AddEvent(new SCInternalEvent("Event_2"));
     }
 
 
-    public void ActivityPrint(object sender, StateChartEventArgs args)
+    public void ActivityPrint(object sender, SCEventArgs args)
     {
         Debug.Log(sender + " sent event to " + this + " from " + args.Source + " with type " + args.Type);
     }

@@ -139,7 +139,7 @@ public class Statechart : ScriptableObject
 
             Transition trans = new Transition(source.ToString() + "->" + target.ToString(), target)
             {
-                trigger = new SCEvent(node.Attributes["event"].Value)
+                trigger = new SCInternalEvent(node.Attributes["event"].Value)
             };
 
             if (node.Attributes["cond"] != null)

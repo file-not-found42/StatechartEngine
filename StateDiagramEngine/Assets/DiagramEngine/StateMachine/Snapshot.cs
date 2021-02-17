@@ -5,14 +5,14 @@ using UnityEngine;
 public class Snapshot
 {
     public readonly Configuration config;
-    public readonly HashSet<SCEvent> events;
+    public readonly HashSet<SCInternalEvent> events;
     public readonly Dictionary<string, bool> properties;
 
-    public Snapshot(Configuration conf, Dictionary<string, bool> ps, HashSet<SCEvent> es)
+    public Snapshot(Configuration conf, Dictionary<string, bool> ps, HashSet<SCInternalEvent> es)
     {
         config = new Configuration(conf);
         properties = new Dictionary<string, bool>(ps);
-        events = new HashSet<SCEvent>(es);
+        events = new HashSet<SCInternalEvent>(es);
     }
 
 
@@ -23,7 +23,7 @@ public class Snapshot
     }
 
 
-    public bool ContainsEvent(SCEvent ev)
+    public bool ContainsEvent(SCInternalEvent ev)
     {
         return events.Contains(ev);
     }

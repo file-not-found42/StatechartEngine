@@ -2,12 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SCEvent
+public class SCInternalEvent
 {
     public readonly string Type;
 
 
-    public SCEvent(string newType)
+    public SCInternalEvent(string newType)
     {
         Type = newType;
     }
@@ -15,20 +15,20 @@ public class SCEvent
 
     public override bool Equals(object other)
     {
-        if (other is SCEvent @event)
+        if (other is SCInternalEvent @event)
             return Type == @event.Type;
         else
             return false;
     }
 
 
-    public static bool operator ==(SCEvent a, SCEvent b)
+    public static bool operator ==(SCInternalEvent a, SCInternalEvent b)
     {
         return a.Equals(b);
     }
 
 
-    public static bool operator !=(SCEvent a, SCEvent b)
+    public static bool operator !=(SCInternalEvent a, SCInternalEvent b)
     {
         return !a.Equals(b);
     }
