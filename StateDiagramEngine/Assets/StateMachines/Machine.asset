@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: Machine
   m_EditorClassIdentifier: 
   scxml: {fileID: 4900000, guid: 16fbc304820641f429a2d6d5b117415c, type: 3}
-  mode: 2
+  mode: 0

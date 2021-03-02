@@ -15,6 +15,10 @@ public class StatechartInstance : MonoBehaviour
     [SerializeField]
     Statechart machine;
 
+#if SC_PROFILE_SINGLE
+        Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        AccumulatedTime total = new AccumulatedTime();
+#endif
 
     public void Initialize(Statechart chart)
     {
@@ -47,23 +51,31 @@ public class StatechartInstance : MonoBehaviour
     public void Step()
     {
 #if SC_PROFILE_SINGLE
-        var stopwatch = new System.Diagnostics.Stopwatch();
         stopwatch.Start();
 #endif
+        // Preparations
+
         var snap = new Snapshot(config, properties, events);
         events.Clear();
 
         var paths = new List<Path>();
 
+        var active = new HashSet<State>();
+        var entered = new HashSet<State>();
+        var exited = new HashSet<State>();
+        
+        // Search Paths
+
         foreach (AtomicState s in config.atomicState)
         {
+            active.UnionWith(s.GetAncestors(null));
+            
             Path p = new Path(s);
             if (s.TryExit(p, snap))
                 paths.Add(p);
         }
 
-        HashSet<State> entered = new HashSet<State>();
-        HashSet<State> exited = new HashSet<State>();
+        // Validate Paths
 
         // Sort by scope high to low
         paths.Sort();
@@ -78,7 +90,7 @@ public class StatechartInstance : MonoBehaviour
             {
                 if (p.GetSource().IsChildOf(e))
                 {
-                    exited.UnionWith(p.GetSource().GetAncestors(e));
+                    Move(active, exited, p.GetSource().GetAncestors(e));
                     valid = false;
                     break;
                 }
@@ -88,18 +100,19 @@ public class StatechartInstance : MonoBehaviour
             {
                 valid_paths.Add(p);
                 entered.UnionWith(p.GetEntered());
-                exited.UnionWith(p.GetExited());
+                Move(active, exited, p.GetExited());
             }
         }
 
-        config.atomicState.ExceptWith(ExtractAtomic(exited));
+        // Execute Step
 
         DoActions(exited, Action.Type.EXIT);
-        DoActions(config.atomicState, Action.Type.STAY);
+        DoActions(active, Action.Type.STAY);
         foreach (var p in valid_paths)
             DoActions(p.GetWaymarks(), Action.Type.PASSTHROUGH);
         DoActions(entered, Action.Type.ENTRY);
 
+        config.atomicState.ExceptWith(ExtractAtomic(exited));
         config.atomicState.UnionWith(ExtractAtomic(entered));
 
 #if SC_PROFILE_SINGLE
@@ -147,7 +160,15 @@ public class StatechartInstance : MonoBehaviour
         return result;
     }
 
-    
+
+    void Move<T>(ISet<T> from, ISet<T> to, ICollection<T> collection)
+    {
+        from.ExceptWith(collection);
+        to.UnionWith(collection);
+    }
+
+
+
     public void AddEvent(SCInternalEvent e)
     {
         events.Add(e);

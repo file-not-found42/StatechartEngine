@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class State : Node
+public abstract class State : Node, System.IComparable<State>
 {
     public State(string n) : base(n) {}
 
@@ -36,7 +36,7 @@ public abstract class State : Node
     }
 
 
-    public List<State> GetAncestors(State limit)
+    public List<State> GetAncestors(in State limit)
     {
         if (this == limit)
             return new List<State> { };
@@ -69,5 +69,15 @@ public abstract class State : Node
         }
 
         return scope;
+    }
+
+    public int CompareTo(State other)
+    {
+        if (other.IsChildOf(this))
+            return -1;
+        else if (IsChildOf(other))
+            return 1;
+        else
+            return 0;
     }
 }

@@ -5,7 +5,7 @@ using UnityEngine;
 public class Transition : ISCElement
 {
     public string name;
-    public Condition cond;
+    public Condition guard;
     public SCInternalEvent trigger = null;
 
     public readonly Node destination;
@@ -20,7 +20,7 @@ public class Transition : ISCElement
 
     public bool Through(Path path, Snapshot snap)
     {
-        bool active = (cond == null || cond.Evaluate(snap))
+        bool active = (guard == null || guard.Evaluate(snap))
             && (trigger == null || snap.ContainsEvent(trigger));
 
         if (active && destination.TryEnter(path, snap))
