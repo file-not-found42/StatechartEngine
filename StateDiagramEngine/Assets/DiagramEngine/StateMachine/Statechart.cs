@@ -143,7 +143,7 @@ public class Statechart : ScriptableObject
             };
 
             if (node.Attributes["cond"] != null)
-                trans.guard = new Condition(node.Attributes["cond"].Value);
+                trans.guard = new Guard(node.Attributes["cond"].Value);
 
             source.outTransitions.Add(int.Parse(node.Attributes["priority"].Value), trans);
         }

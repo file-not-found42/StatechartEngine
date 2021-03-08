@@ -5,7 +5,7 @@ using UnityEngine;
 public class Transition : ISCElement
 {
     public string name;
-    public Condition guard;
+    public Guard guard;
     public SCInternalEvent trigger = null;
 
     public readonly Node destination;
