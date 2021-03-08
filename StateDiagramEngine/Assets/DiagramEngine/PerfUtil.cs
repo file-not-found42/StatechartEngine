@@ -15,8 +15,13 @@ public class AccumulatedTime
     { get { return TotalSec / count; } }
 
     public float AverageMS
-    { get { return 1000.0f * (float)AverageSec; } }
+    { get { return (float)(1e3 * AverageSec); } }
 
+    public long AverageµS
+    { get { return (long)(1e6 * AverageSec); } }
+
+    public long SampleCount
+    { get { return count; } }
 
     public void Accumulate(Stopwatch watch)
     {

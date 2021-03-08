@@ -16,8 +16,11 @@ public class StatechartInstance : MonoBehaviour
     Statechart machine;
 
 #if SC_PROFILE_SINGLE
-        Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-        AccumulatedTime total = new AccumulatedTime();
+    System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+    AccumulatedTime prepare = new AccumulatedTime();
+    AccumulatedTime search = new AccumulatedTime();
+    AccumulatedTime validate = new AccumulatedTime();
+    AccumulatedTime execute = new AccumulatedTime();
 #endif
 
     public void Initialize(Statechart chart)
@@ -63,7 +66,14 @@ public class StatechartInstance : MonoBehaviour
         var active = new HashSet<State>();
         var entered = new HashSet<State>();
         var exited = new HashSet<State>();
-        
+
+
+#if SC_PROFILE_SINGLE
+        stopwatch.Stop();
+        prepare.Accumulate(stopwatch);
+        stopwatch.Reset();
+        stopwatch.Start();
+#endif
         // Search Paths
 
         foreach (AtomicState s in config.atomicState)
@@ -75,6 +85,12 @@ public class StatechartInstance : MonoBehaviour
                 paths.Add(p);
         }
 
+#if SC_PROFILE_SINGLE
+        stopwatch.Stop();
+        search.Accumulate(stopwatch);
+        stopwatch.Reset();
+        stopwatch.Start();
+#endif
         // Validate Paths
 
         // Sort by scope high to low
@@ -104,6 +120,12 @@ public class StatechartInstance : MonoBehaviour
             }
         }
 
+#if SC_PROFILE_SINGLE
+        stopwatch.Stop();
+        validate.Accumulate(stopwatch);
+        stopwatch.Reset();
+        stopwatch.Start();
+#endif
         // Execute Step
 
         DoActions(exited, Action.Type.EXIT);
@@ -117,7 +139,10 @@ public class StatechartInstance : MonoBehaviour
 
 #if SC_PROFILE_SINGLE
         stopwatch.Stop();
-        Debug.Log(stopwatch.ElapsedMilliseconds);
+        execute.Accumulate(stopwatch);
+        stopwatch.Reset();
+
+        Debug.Log(prepare.SampleCount + "\t Values: " + prepare.AverageµS + "\t" + search.AverageµS + "\t" + validate.AverageµS + "\t" + execute.AverageµS);
 #endif
 
 #if SC_LOG_FUNCTIONALITY
