@@ -67,7 +67,6 @@ public class StatechartInstance : MonoBehaviour
         var entered = new HashSet<State>();
         var exited = new HashSet<State>();
 
-
 #if SC_PROFILE_SINGLE
         stopwatch.Stop();
         prepare.Accumulate(stopwatch);
@@ -134,6 +133,11 @@ public class StatechartInstance : MonoBehaviour
             DoActions(p.GetWaymarks(), Action.Type.PASSTHROUGH);
         DoActions(entered, Action.Type.ENTRY);
 
+        foreach (var s in exited)
+            events.Add(new SCInternalEvent("exited." + s.ToString()));
+        foreach (var s in entered)
+            events.Add(new SCInternalEvent("entered." + s.ToString()));
+
         config.atomicState.ExceptWith(ExtractAtomic(exited));
         config.atomicState.UnionWith(ExtractAtomic(entered));
 
@@ -141,7 +145,6 @@ public class StatechartInstance : MonoBehaviour
         stopwatch.Stop();
         execute.Accumulate(stopwatch);
         stopwatch.Reset();
-
         Debug.Log(prepare.SampleCount + "\t Values: " + prepare.AverageµS + "\t" + search.AverageµS + "\t" + validate.AverageµS + "\t" + execute.AverageµS);
 #endif
 
@@ -191,7 +194,6 @@ public class StatechartInstance : MonoBehaviour
         from.ExceptWith(collection);
         to.UnionWith(collection);
     }
-
 
 
     public void AddEvent(SCInternalEvent e)
