@@ -1,38 +1,28 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 public abstract class State : Node, System.IComparable<State>
 {
-    public State(string n) : base(n) {}
+    public State(string name, State parent) : base(name, parent) { }
 
 
-    public abstract List<AtomicState> Enter();
-
-
-    public override bool TryEnter(Path path, Snapshot snap)
+    public (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryExit(Snapshot snap)
     {
-        var states = Enter();
-
-        foreach (var s in states)
+        if (parent != null)
         {
-            path.AddDestination(s);
+            var next = parent.TryExit(snap);
+            if (next != (null, null))
+                return next;
         }
-        
-        return true;
-    }
 
+        foreach (var t in outTransitions.Values)
+        {
+            var next = t.TryThrough(snap);
+            if (next != (null, null))
+                return next;
+        }
 
-    public override bool TryExit(Path path, Snapshot snap)
-    {
-        if (parent != null && parent.TryExit(path, snap))
-            return true;
-
-        foreach(Transition t in outTransitions.Values)
-            if (t.Through(path, snap))
-                return true;
-
-        return false;
+        return (null, null);
     }
 
 
@@ -70,6 +60,7 @@ public abstract class State : Node, System.IComparable<State>
 
         return scope;
     }
+
 
     public int CompareTo(State other)
     {

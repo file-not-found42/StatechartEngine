@@ -5,22 +5,20 @@ using UnityEngine;
 public abstract class Node : ISCElement
 {
     public readonly string name;
-    public State parent = null;
+    public readonly State parent = null;
 
     // Sorted by priority
     public readonly SortedList<int, Transition> outTransitions = new SortedList<int, Transition>();
 
 
-    public Node(string n)
+    public Node(string name, State parent)
     {
-        name = n;
+        this.name = name;
+        this.parent = parent;
     }
-
-
-    public abstract bool TryExit(Path path, Snapshot snap);
     
     
-    public abstract bool TryEnter(Path path, Snapshot snap);
+    public abstract (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryEnter(Snapshot snap);
 
 
     public bool IsChildOf(State state)

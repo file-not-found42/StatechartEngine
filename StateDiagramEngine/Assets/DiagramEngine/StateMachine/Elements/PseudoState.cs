@@ -1,26 +1,21 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class PseudoState : Node
 {
-    public PseudoState(string n) : base(n) { }
+    public PseudoState(string name, State parent) : base(name, parent) { }
 
-
-    public override bool TryEnter(Path path, Snapshot snap)
+    public override (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryEnter(Snapshot snap)
     {
-        return TryExit(path, snap);
-    }
-
-
-    public override bool TryExit(Path path, Snapshot snap)
-    {
-        foreach (Transition t in outTransitions.Values)
-            if (t.Through(path, snap))
+        foreach (var t in outTransitions.Values)
+        {
+            var next = t.TryThrough(snap);
+            if (next != (null, null))
             {
-                path.AddWaymark(this);
-                return true;
+                next.waypoints.Add(this);
+                return next;
             }
-        return false;
+        }
+        
+        return (null, null);
     }
 }

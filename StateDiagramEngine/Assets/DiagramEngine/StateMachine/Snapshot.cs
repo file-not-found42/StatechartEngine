@@ -4,13 +4,11 @@ using UnityEngine;
 
 public class Snapshot
 {
-    public readonly Configuration config;
     public readonly HashSet<SCInternalEvent> events;
     public readonly Dictionary<string, bool> properties;
 
-    public Snapshot(Configuration conf, Dictionary<string, bool> ps, HashSet<SCInternalEvent> es)
+    public Snapshot(Dictionary<string, bool> ps, HashSet<SCInternalEvent> es)
     {
-        config = new Configuration(conf);
         properties = new Dictionary<string, bool>(ps);
         events = new HashSet<SCInternalEvent>(es);
     }

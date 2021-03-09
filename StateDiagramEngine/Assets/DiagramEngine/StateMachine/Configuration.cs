@@ -18,6 +18,12 @@ public class Configuration
     }
 
 
+    public Configuration(IEnumerable<AtomicState> states)
+    {
+        atomicState = new HashSet<AtomicState>(states);
+    }
+
+
     public override string ToString()
     {
         var sb = new System.Text.StringBuilder("[");

@@ -4,14 +4,13 @@ using UnityEngine;
 
 public class CompoundState : State
 {
-    public State entryChild = null;
+    public Node entryChild = null;
 
 
-    public CompoundState(string n) : base(n) { }
+    public CompoundState(string name, State parent) : base(name, parent) { }
 
-
-    public override List<AtomicState> Enter()
+    public override (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryEnter(Snapshot snap)
     {
-        return entryChild.Enter();
+        return entryChild.TryEnter(snap);
     }
 }

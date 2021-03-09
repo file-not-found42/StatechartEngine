@@ -7,16 +7,24 @@ public class ParallelState : State
     public readonly List<State> regions = new List<State>();
 
 
-    public ParallelState(string n) : base(n) { }
+    public ParallelState(string name, State parent) : base(name, parent) { }
 
 
-    public override List<AtomicState> Enter()
+    public override (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryEnter(Snapshot snap)
     {
-        var result = new List<AtomicState>(regions.Count);
+        (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) result = (null, null);
 
         foreach (var r in regions)
-            result.AddRange(r.Enter());
-        
+        {
+            var next = r.TryEnter(snap);
+
+            if (next == (null, null))
+                return (null, null);
+
+            result.destinations.UnionWith(next.destinations);
+            result.waypoints.UnionWith(next.waypoints);
+        }
+
         return result;
     }
 }

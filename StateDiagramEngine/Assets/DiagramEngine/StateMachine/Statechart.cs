@@ -40,73 +40,70 @@ public class Statechart : ScriptableObject
             ParseTransitions(doc.LastChild);
         }
         
-        Configuration config = new Configuration();
-        config.atomicState.UnionWith(root.Enter());
+        var start = root.TryEnter(new Snapshot(new Dictionary<string, bool>(), new HashSet<SCInternalEvent>()));
+        if (start == (null, null))
+            throw new System.Exception("The statechart in " + scxml + " could not be initialized.");
+
+        Configuration config = new Configuration(start.destinations);
         return config;
     }
 
 
     void ParseStates(XmlNode node)
     {
-        if (node.Name == "state")
+        if (node.Name == "state" || node.Name == "parallel" || node.Name == "pseudo")
         {
-            // Test if the state is an atomic state
-            bool isAtomic = true;
-            if (node.HasChildNodes)
+            string name = node.Attributes["id"].Value;
+            State parent = root == null ? null : GetState(node.ParentNode.Attributes["id"].Value);
+            
+            if (node.Name == "state")
+            {
+                // Test if the state is an atomic state
+                bool isAtomic = true;
                 foreach (XmlNode n in node.ChildNodes)
-                    if (n.Name == "state" || n.Name == "parallel")
+                    if (n.Name != "transition")
                         isAtomic = false;
 
-            // Create the new state
-            State state;
-            if (isAtomic)
-                state = new AtomicState(node.Attributes["id"].Value);
-            else
-                state = new CompoundState(node.Attributes["id"].Value);
-            
-            if (root == null)
-                root = state;
-            else
-                state.parent = GetState(node.ParentNode.Attributes["id"].Value);
-
-            states.Add(state);
-
-            // Recursion
-            if (node.HasChildNodes)
-                foreach (XmlNode n in node.ChildNodes)
-                    ParseStates(n);
-
-            // Set the entry state for a compound state
-            if (!isAtomic)
-            {
-                string entryState = node.Attributes["initial"].Value;
-                ((CompoundState)state).entryChild = GetState(entryState);
-            }
-        }
-        else if (node.Name == "parallel")
-        {
-            ParallelState state = new ParallelState(node.Attributes["id"].Value)
-            {
-                parent = GetState(node.ParentNode.Attributes["id"].Value)
-            };
-
-            states.Add(state);
-
-            if (node.HasChildNodes)
-            {
-                foreach (XmlNode n in node.ChildNodes)
-                    ParseStates(n);
-
-                foreach (XmlNode n in node.ChildNodes)
+                if (isAtomic)
                 {
-                    if (n.Name == "transition")
-                        continue;
+                    AtomicState state = new AtomicState(name, parent);
+                    states.Add(state);
 
-                    string region = n.Attributes["id"].Value;
-                    state.regions.Add((CompoundState)GetState(region));
+                    // Recursion
+                    foreach (XmlNode n in node.ChildNodes)
+                        ParseStates(n);
+                }
+                else
+                {
+                    CompoundState state = new CompoundState(name, parent);
+                    states.Add(state);
+                    
+                    // Recursion
+                    foreach (XmlNode n in node.ChildNodes)
+                        ParseStates(n);
+                    
+                    // Set the entry state for a compound state
+                    string entryState = node.Attributes["initial"].Value;
+                    state.entryChild = GetState(entryState);
                 }
             }
+            else if (node.Name == "parallel")
+            {
+                ParallelState state = new ParallelState(name, parent);
+                states.Add(state);
 
+                foreach (XmlNode n in node.ChildNodes)
+                    ParseStates(n);
+
+                foreach (XmlNode n in node.ChildNodes)
+                    if (n.Name == "state" || n.Name == "parallel")
+                        state.regions.Add((CompoundState)GetState(n.Attributes["id"].Value));
+            }
+            else if (node.Name == "pseudo")
+            {
+                PseudoState pseudo = new PseudoState(name, parent);
+                states.Add(pseudo);
+            }
         }
         else if (node.Name == "transition")
         { } // Do nothing for now
@@ -119,7 +116,9 @@ public class Statechart : ScriptableObject
 
     public void ParseTransitions(XmlNode node)
     {
-        if (node.Name == "state" || node.Name == "parallel")
+        if (node.Name == "state" 
+            || node.Name == "parallel"
+            || node.Name == "pseudo")
         {
             if (node.HasChildNodes)
                 foreach (XmlNode n in node.ChildNodes)

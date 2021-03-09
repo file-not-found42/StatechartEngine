@@ -58,7 +58,7 @@ public class StatechartInstance : MonoBehaviour
 #endif
         // Preparations
 
-        var snap = new Snapshot(config, properties, events);
+        var snap = new Snapshot(properties, events);
         events.Clear();
 
         var paths = new List<Path>();
@@ -79,9 +79,9 @@ public class StatechartInstance : MonoBehaviour
         {
             active.UnionWith(s.GetAncestors(null));
             
-            Path p = new Path(s);
-            if (s.TryExit(p, snap))
-                paths.Add(p);
+            var next = s.TryExit(snap);
+            if (next != (null, null))
+                paths.Add(new Path(s, next.waypoints, next.destinations));
         }
 
 #if SC_PROFILE_SINGLE
@@ -130,7 +130,7 @@ public class StatechartInstance : MonoBehaviour
         DoActions(exited, Action.Type.EXIT);
         DoActions(active, Action.Type.STAY);
         foreach (var p in valid_paths)
-            DoActions(p.GetWaymarks(), Action.Type.PASSTHROUGH);
+            DoActions(p.GetWaypoints(), Action.Type.PASSTHROUGH);
         DoActions(entered, Action.Type.ENTRY);
 
         foreach (var s in exited)
@@ -233,6 +233,17 @@ public class StatechartInstance : MonoBehaviour
     {
         properties.TryGetValue(name, out bool value);
         return value;
+    }
+
+
+    public bool IsStateActive(string name)
+    {
+        foreach (var s in config.atomicState)
+            foreach (var a in s.GetAncestors(null))
+                if (a.ToString().Equals(name))
+                    return true;
+
+        return false;
     }
 
 

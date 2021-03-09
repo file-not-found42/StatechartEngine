@@ -5,8 +5,8 @@ using UnityEngine;
 public class Transition : ISCElement
 {
     public string name;
-    public Guard guard;
     public SCInternalEvent trigger = null;
+    public Guard guard;
 
     public readonly Node destination;
 
@@ -18,18 +18,22 @@ public class Transition : ISCElement
     }
 
 
-    public bool Through(Path path, Snapshot snap)
+    public (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryThrough(Snapshot snap)
     {
         bool active = (guard == null || guard.Evaluate(snap))
             && (trigger == null || snap.ContainsEvent(trigger));
 
-        if (active && destination.TryEnter(path, snap))
-        {
-            path.AddWaymark(this);
-            return true;
-        }
+        if (!active)
+            return (null, null);
 
-        return false;
+        var next = destination.TryEnter(snap);
+
+        if (next == (null, null))
+            return (null, null);
+
+        next.waypoints.Add(this);
+
+        return next;
     }
 
 

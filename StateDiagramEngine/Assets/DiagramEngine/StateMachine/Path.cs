@@ -5,13 +5,16 @@ using UnityEngine;
 public class Path : System.IComparable<Path>
 {
     readonly AtomicState source;
-    readonly ISet<AtomicState> destinations = new HashSet<AtomicState>();
-    readonly ICollection<ISCElement> waymarks = new List<ISCElement>();
+    
+    readonly ISet<AtomicState> destinations;
+    readonly ISet<ISCElement> waypoints;
 
 
-    public Path(AtomicState s)
+    public Path(AtomicState s, ISet<ISCElement> waypoints, ISet<AtomicState> destinations)
     {
         source = s;
+        this.waypoints = waypoints;
+        this.destinations = destinations;
     }
 
 
@@ -59,26 +62,8 @@ public class Path : System.IComparable<Path>
     }
 
 
-    public void AddWaymark(ISCElement transition)
+    public ICollection<ISCElement> GetWaypoints()
     {
-        waymarks.Add(transition);
-    }
-
-
-    public ICollection<ISCElement> GetWaymarks()
-    {
-        return waymarks;
-    }
-
-
-    public void AddDestination(AtomicState state)
-    {
-        destinations.Add(state);
-    }
-
-
-    public ISet<AtomicState> GetDestinations()
-    {
-        return destinations;
+        return waypoints;
     }
 }
