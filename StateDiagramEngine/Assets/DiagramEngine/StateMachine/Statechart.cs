@@ -13,7 +13,6 @@ public class Statechart : ScriptableObject
         Unity_Update,
         Unity_Late_Update,
         Unity_Fixed_Update,
-        Unity_On_Gui
     }
 
     [SerializeField]
@@ -69,6 +68,9 @@ public class Statechart : ScriptableObject
                     AtomicState state = new AtomicState(name, parent);
                     states.Add(state);
 
+                    if (root == null)
+                        root = state;
+
                     // Recursion
                     foreach (XmlNode n in node.ChildNodes)
                         ParseStates(n);
@@ -77,7 +79,10 @@ public class Statechart : ScriptableObject
                 {
                     CompoundState state = new CompoundState(name, parent);
                     states.Add(state);
-                    
+
+                    if (root == null)
+                        root = state;
+
                     // Recursion
                     foreach (XmlNode n in node.ChildNodes)
                         ParseStates(n);
@@ -91,6 +96,9 @@ public class Statechart : ScriptableObject
             {
                 ParallelState state = new ParallelState(name, parent);
                 states.Add(state);
+
+                if (root == null)
+                    root = state;
 
                 foreach (XmlNode n in node.ChildNodes)
                     ParseStates(n);

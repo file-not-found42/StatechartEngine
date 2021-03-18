@@ -1,32 +1,65 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
-using UnityEngine;
+using System.Text;
 
 public class AccumulatedTime
 {
-    long ticks = 0;
+    public enum TimeUnit
+    {
+        µs,
+        ms,
+        s
+    }
+
+    long sum = 0;
     long count = 0;
-    
-    public double TotalSec
-    { get { return ticks / (double)Stopwatch.Frequency; } }
+    long min = long.MaxValue;
+    long max = long.MinValue;
 
-    public double AverageSec
-    { get { return TotalSec / count; } }
-
-    public float AverageMS
-    { get { return (float)(1e3 * AverageSec); } }
-
-    public long AverageµS
-    { get { return (long)(1e6 * AverageSec); } }
 
     public long SampleCount
     { get { return count; } }
 
+
     public void Accumulate(Stopwatch watch)
     {
-        ticks += watch.ElapsedTicks;
+        long elapsed = watch.ElapsedTicks;
+        
+        if (elapsed < min)
+            min = elapsed;
+        else if (elapsed > max)
+            max = elapsed;
+       
+        sum += elapsed;
         count++;
+    }
+
+
+    public string GetStatisitics(TimeUnit unit)
+    {
+        var builder = new StringBuilder();
+
+        builder.Append("Count: ");
+        builder.Append(count);
+        builder.Append("\t Average: ");
+        builder.Append(ToUnit(sum, unit) / count);
+        builder.Append("\t Minimum: ");
+        builder.Append(ToUnit(min, unit));
+        builder.Append("\t Maximum: ");
+        builder.Append(ToUnit(max, unit));
+
+        return builder.ToString();
+    }
+
+
+    static double ToUnit(long ticks, TimeUnit unit)
+    {
+        return unit switch
+        {
+            TimeUnit.µs => ticks / (double)Stopwatch.Frequency * 1e6,
+            TimeUnit.ms => ticks / (double)Stopwatch.Frequency * 1e3,
+            TimeUnit.s => ticks / (double)Stopwatch.Frequency,
+            _ => 0,
+        };
     }
 }
 

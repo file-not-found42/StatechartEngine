@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class TestScript_SingleRandom : MonoBehaviour
 {
-    readonly string[] event_types = {"Event_1", "Event_2"};
+    readonly string[] event_types = {"Event_1", "Event_2", "Event_3"};
 
     StatechartInstance stateMachine = null;
 

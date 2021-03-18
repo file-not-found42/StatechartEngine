@@ -145,7 +145,11 @@ public class StatechartInstance : MonoBehaviour
         stopwatch.Stop();
         execute.Accumulate(stopwatch);
         stopwatch.Reset();
-        Debug.Log(prepare.SampleCount + "\t Values: " + prepare.AverageµS + "\t" + search.AverageµS + "\t" + validate.AverageµS + "\t" + execute.AverageµS);
+        if (prepare.SampleCount % 1000 == 0)
+            Debug.Log(prepare.GetStatisitics(AccumulatedTime.TimeUnit.µs) + "\n"
+                    + search.GetStatisitics(AccumulatedTime.TimeUnit.µs) + "\n"
+                    + validate.GetStatisitics(AccumulatedTime.TimeUnit.µs) + "\n"
+                    + execute.GetStatisitics(AccumulatedTime.TimeUnit.µs));
 #endif
 
 #if SC_LOG_FUNCTIONALITY

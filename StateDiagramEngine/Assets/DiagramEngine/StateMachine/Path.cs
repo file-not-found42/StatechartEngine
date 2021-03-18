@@ -24,8 +24,7 @@ public class Path : System.IComparable<Path>
         var entered = new HashSet<State>();
 
         foreach (var d in destinations)
-            foreach (var s in d.GetAncestors(scope))
-                entered.Add(s);
+            entered.UnionWith(d.GetAncestors(scope));
 
         return entered;
     }

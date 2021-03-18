@@ -12,7 +12,7 @@ public class ParallelState : State
 
     public override (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryEnter(Snapshot snap)
     {
-        (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) result = (null, null);
+        (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) result = (new HashSet<AtomicState>(), new HashSet<ISCElement>());
 
         foreach (var r in regions)
         {

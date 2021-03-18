@@ -8,13 +8,15 @@
 	<state id="B">
 		<transition event="Event_1" target="A" priority="0"/>
 		<transition event="Event_2" target="C" priority="1"/>
+        <transition event="Event_3" target="E" priority="2"/>
 	</state>
 	
 	<parallel id="C">
 		<transition event="Event_2" target="B" priority="0"/>
 		<state id="D" initial="E">
 			<state id="E">
-				<transition event="Event_1" target="F" priority="0"/>
+				<transition event="Event_1" target="F" priority="1"/>
+                <transition event="Event_3" target="B" priority="0"/>
 			</state>
 			
 			<state id="F">

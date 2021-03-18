@@ -10,7 +10,6 @@ public class StatechartEngine : MonoBehaviour
     readonly IList<StatechartInstance> updateInstances = new List<StatechartInstance>();
     readonly IList<StatechartInstance> lateInstances = new List<StatechartInstance>();
     readonly IList<StatechartInstance> fixedInstances = new List<StatechartInstance>();
-    readonly IList<StatechartInstance> guiInstances = new List<StatechartInstance>();
 
 #if SC_PROFILE_UPDATE
     System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
@@ -44,9 +43,6 @@ public class StatechartEngine : MonoBehaviour
             case Statechart.Mode.Unity_Fixed_Update:
                 GetInstance().fixedInstances.Add(ins);
                 break;
-            case Statechart.Mode.Unity_On_Gui:
-                GetInstance().guiInstances.Add(ins);
-                break;
         }
     }
 
@@ -63,9 +59,6 @@ public class StatechartEngine : MonoBehaviour
                 break;
             case Statechart.Mode.Unity_Fixed_Update:
                 GetInstance().fixedInstances.Remove(ins);
-                break;
-            case Statechart.Mode.Unity_On_Gui:
-                GetInstance().guiInstances.Remove(ins);
                 break;
         }
     }
@@ -99,13 +92,6 @@ public class StatechartEngine : MonoBehaviour
     void FixedUpdate()
     {
         foreach (StatechartInstance i in fixedInstances)
-            i.Step();
-    }
-
-
-    void OnGUI()
-    {
-        foreach (StatechartInstance i in guiInstances)
             i.Step();
     }
 }
