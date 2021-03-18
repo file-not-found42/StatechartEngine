@@ -6,12 +6,6 @@ public class Configuration
     public readonly HashSet<AtomicState> atomicState = null;
 
 
-    public Configuration()
-    {
-        atomicState = new HashSet<AtomicState>();
-    }
-
-
     public Configuration(Configuration other)
     {
         atomicState = new HashSet<AtomicState>(other.atomicState);

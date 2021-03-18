@@ -105,7 +105,7 @@ public class Statechart : ScriptableObject
 
                 foreach (XmlNode n in node.ChildNodes)
                     if (n.Name == "state" || n.Name == "parallel")
-                        state.regions.Add((CompoundState)GetState(n.Attributes["id"].Value));
+                        state.regions.Add(GetState(n.Attributes["id"].Value));
             }
             else if (node.Name == "pseudo")
             {
