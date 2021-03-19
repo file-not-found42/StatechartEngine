@@ -34,7 +34,7 @@ public class AccumulatedTime
     }
 
 
-    public string GetStatisitics(TimeUnit unit)
+    public string GetStatistics(TimeUnit unit)
     {
         var builder = new StringBuilder();
 

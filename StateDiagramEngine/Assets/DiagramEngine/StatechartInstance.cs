@@ -75,7 +75,7 @@ public class StatechartInstance : MonoBehaviour
 #endif
         // Search Paths
 
-        foreach (AtomicState s in config.atomicState)
+        foreach (AtomicState s in config.activeStates)
         {
             active.UnionWith(s.GetAncestors(null));
             
@@ -95,27 +95,61 @@ public class StatechartInstance : MonoBehaviour
         // Sort by scope high to low
         paths.Sort();
 
-        var valid_paths = new List<Path>();
-
         // Remove conflicting paths by priority
+        var valid_paths = new List<Path>();
         foreach (var p in paths)
         {
             bool valid = true;
-            foreach (var e in exited)
-            {
-                if (p.GetSource().IsChildOf(e))
+            var ancestors = p.GetSource().GetAncestors(null);
+            ancestors.Reverse();
+            foreach (var a in ancestors)
+                if (exited.Contains(a))
                 {
-                    Move(active, exited, p.GetSource().GetAncestors(e));
+                    Move(active, exited, p.GetSource().GetAncestors(a));
                     valid = false;
                     break;
                 }
-            }
 
             if (valid)
             {
                 valid_paths.Add(p);
                 entered.UnionWith(p.GetEntered());
                 Move(active, exited, p.GetExited());
+            }
+        }
+        // Remove any so far untouched parallel regions which have been implicitly exited
+        {
+            var ToRemove = new HashSet<State>();
+            foreach (var act in active)
+            {
+                var ancestors = act.GetAncestors(null);
+                ancestors.Reverse();
+                foreach (var a in ancestors)
+                    if (exited.Contains(a))
+                    {
+                        ToRemove.UnionWith(act.GetAncestors(a));
+                        break;
+                    }
+            }
+            Move(active, exited, ToRemove);
+        }
+        // Implicitly enter all so far untouched parallel regions
+        {
+            var regions = new HashSet<State>();
+            foreach (var e in entered)
+                if (e is ParallelState p)
+                    regions.UnionWith(p.regions);
+
+            regions.ExceptWith(active);
+            regions.ExceptWith(entered);
+
+            foreach (var r in regions)
+            {
+                var next = r.TryEnter(snap);
+                if (next != (null, null))
+                {
+                    entered.UnionWith(next.destinations);
+                }
             }
         }
 
@@ -138,22 +172,26 @@ public class StatechartInstance : MonoBehaviour
         foreach (var s in entered)
             events.Add(new SCInternalEvent("entered." + s.ToString()));
 
-        config.atomicState.ExceptWith(ExtractAtomic(exited));
-        config.atomicState.UnionWith(ExtractAtomic(entered));
+        config.activeStates.ExceptWith(ExtractAtomic(exited));
+        config.activeStates.UnionWith(ExtractAtomic(entered));
 
 #if SC_PROFILE_SINGLE
         stopwatch.Stop();
         execute.Accumulate(stopwatch);
         stopwatch.Reset();
         if (prepare.SampleCount % 1000 == 0)
-            Debug.Log(prepare.GetStatisitics(AccumulatedTime.TimeUnit.탎) + "\n"
-                    + search.GetStatisitics(AccumulatedTime.TimeUnit.탎) + "\n"
-                    + validate.GetStatisitics(AccumulatedTime.TimeUnit.탎) + "\n"
-                    + execute.GetStatisitics(AccumulatedTime.TimeUnit.탎));
+            Debug.Log(prepare.GetStatistics(AccumulatedTime.TimeUnit.탎) + "\n"
+                    + search.GetStatistics(AccumulatedTime.TimeUnit.탎) + "\n"
+                    + validate.GetStatistics(AccumulatedTime.TimeUnit.탎) + "\n"
+                    + execute.GetStatistics(AccumulatedTime.TimeUnit.탎));
 #endif
 
 #if SC_LOG_FUNCTIONALITY
         Debug.Log(this + " is now in " + config.ToString());
+#endif
+#if SC_DEBUG
+        if (!config.IsValid())
+            Debug.LogError("Invalid configuration in instance " + this + ":\n" + config.ToString());
 #endif
     }
 
@@ -242,7 +280,7 @@ public class StatechartInstance : MonoBehaviour
 
     public bool IsStateActive(string name)
     {
-        foreach (var s in config.atomicState)
+        foreach (var s in config.activeStates)
             foreach (var a in s.GetAncestors(null))
                 if (a.ToString().Equals(name))
                     return true;

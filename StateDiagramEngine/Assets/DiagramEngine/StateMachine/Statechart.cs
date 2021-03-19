@@ -20,17 +20,14 @@ public class Statechart : ScriptableObject
     [SerializeField]
     Mode mode = Mode.Manual;
 
-    //[SerializeField]
     readonly List<Node> states = new List<Node>();
-    //[SerializeField]
     readonly List<Transition> transitions = new List<Transition>();
-    //[SerializeField]
-    State root = null;
+    public State Root { get; private set; }
 
     
     public Configuration Instantiate()
     {
-        if (root == null)
+        if (Root == null)
         {
             XmlDocument doc = new XmlDocument();
             doc.LoadXml(scxml.text);
@@ -39,11 +36,11 @@ public class Statechart : ScriptableObject
             ParseTransitions(doc.LastChild);
         }
         
-        var start = root.TryEnter(new Snapshot(new Dictionary<string, bool>(), new HashSet<SCInternalEvent>()));
+        var start = Root.TryEnter(new Snapshot(new Dictionary<string, bool>(), new HashSet<SCInternalEvent>()));
         if (start == (null, null))
             throw new System.Exception("The statechart in " + scxml + " could not be initialized.");
 
-        Configuration config = new Configuration(start.destinations);
+        Configuration config = new Configuration(this, start.destinations);
         return config;
     }
 
@@ -53,7 +50,7 @@ public class Statechart : ScriptableObject
         if (node.Name == "state" || node.Name == "parallel" || node.Name == "pseudo")
         {
             string name = node.Attributes["id"].Value;
-            State parent = root == null ? null : GetState(node.ParentNode.Attributes["id"].Value);
+            State parent = Root == null ? null : GetState(node.ParentNode.Attributes["id"].Value);
             
             if (node.Name == "state")
             {
@@ -68,8 +65,8 @@ public class Statechart : ScriptableObject
                     AtomicState state = new AtomicState(name, parent);
                     states.Add(state);
 
-                    if (root == null)
-                        root = state;
+                    if (Root == null)
+                        Root = state;
 
                     // Recursion
                     foreach (XmlNode n in node.ChildNodes)
@@ -80,13 +77,17 @@ public class Statechart : ScriptableObject
                     CompoundState state = new CompoundState(name, parent);
                     states.Add(state);
 
-                    if (root == null)
-                        root = state;
+                    if (Root == null)
+                        Root = state;
 
                     // Recursion
                     foreach (XmlNode n in node.ChildNodes)
                         ParseStates(n);
-                    
+
+                    foreach (XmlNode n in node.ChildNodes)
+                        if (n.Name == "state" || n.Name == "parallel")
+                            state.children.Add(GetState(n.Attributes["id"].Value));
+
                     // Set the entry state for a compound state
                     string entryState = node.Attributes["initial"].Value;
                     state.entryChild = GetState(entryState);
@@ -97,8 +98,8 @@ public class Statechart : ScriptableObject
                 ParallelState state = new ParallelState(name, parent);
                 states.Add(state);
 
-                if (root == null)
-                    root = state;
+                if (Root == null)
+                    Root = state;
 
                 foreach (XmlNode n in node.ChildNodes)
                     ParseStates(n);

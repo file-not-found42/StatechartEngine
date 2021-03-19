@@ -25,7 +25,11 @@ public abstract class State : Node, System.IComparable<State>
         return (null, null);
     }
 
-
+    /// <summary>
+    /// Computes the list of states which contain the state from top to bottom, up to a limit
+    /// </summary>
+    /// <param name="limit">The limit up to which the list will be computed</param>
+    /// <returns>The list of states which contain the state</returns>
     public List<State> GetAncestors(in State limit)
     {
         if (this == limit)

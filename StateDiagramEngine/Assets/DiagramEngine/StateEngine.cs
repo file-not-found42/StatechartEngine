@@ -77,7 +77,7 @@ public class StatechartEngine : MonoBehaviour
         stopwatch.Stop();
         accTime.Accumulate(stopwatch);
         stopwatch.Reset();
-        Debug.Log("Average " + accTime.AverageMS + " ms");
+        Debug.Log(accTime.GetStatistics(AccumulatedTime.TimeUnit.µs));
 #endif
     }
 
