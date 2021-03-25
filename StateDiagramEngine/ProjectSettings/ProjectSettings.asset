@@ -574,7 +574,7 @@ PlayerSettings:
   webGLThreadsSupport: 0
   webGLDecompressionFallback: 0
   scriptingDefineSymbols:
-    1: SC_DEBUG;SC_PROFILE_SINGLE
+    1: SC_LOG_FUNCTIONALITY
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend: {}

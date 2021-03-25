@@ -34,4 +34,10 @@ public class SCEvent
     {
         return Type.GetHashCode();
     }
+
+    
+    public override string ToString()
+    {
+        return Type;
+    }
 }

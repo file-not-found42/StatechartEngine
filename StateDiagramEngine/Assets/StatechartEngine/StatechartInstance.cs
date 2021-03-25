@@ -253,6 +253,10 @@ public class StatechartInstance : MonoBehaviour
     {
         events.Add(e);
 
+#if SC_LOG_FUNCTIONALITY
+        Debug.Log("Added event \"" + e.ToString() + "\" to statechart " + this);
+#endif
+
         if (machine.GetMode() == Statechart.Mode.On_Event)
             SuperStep();
     }
@@ -279,6 +283,10 @@ public class StatechartInstance : MonoBehaviour
     public void SetProperty(string name, bool value)
     {
         properties[name] = value;
+
+#if SC_LOG_FUNCTIONALITY
+        Debug.Log("Set property \"" + name + "\" to \"" + value + "\" to statechart " + this);
+#endif
     }
 
 
