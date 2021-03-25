@@ -22,7 +22,7 @@ public class TestScript_Single : MonoBehaviour
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
-            stateMachine.Step();
+            stateMachine.SuperStep();
 
         if (Input.GetKeyDown(KeyCode.Alpha0))
             stateMachine.AddEvent(new SCEvent("Event_0"));

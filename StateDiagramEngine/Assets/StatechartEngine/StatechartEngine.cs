@@ -70,7 +70,7 @@ public class StatechartEngine : MonoBehaviour
 #endif
 
         foreach (StatechartInstance i in updateInstances)
-            i.Step();
+            i.SuperStep();
 
 #if SC_PROFILE_UPDATE
         stopwatch.Stop();
@@ -84,13 +84,13 @@ public class StatechartEngine : MonoBehaviour
     void LateUpdate()
     {
         foreach (StatechartInstance i in lateInstances)
-            i.Step();
+            i.SuperStep();
     }
 
 
     void FixedUpdate()
     {
         foreach (StatechartInstance i in fixedInstances)
-            i.Step();
+            i.SuperStep();
     }
 }

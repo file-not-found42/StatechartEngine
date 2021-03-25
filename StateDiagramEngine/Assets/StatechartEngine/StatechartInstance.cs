@@ -49,7 +49,18 @@ public class StatechartInstance : MonoBehaviour
     }
 
 
-    public void Step()
+    public bool SuperStep()
+    {
+        uint i = 0;
+        
+        while (i < machine.GetStepSize() && Step()) 
+            i++;
+        
+        return i != 0;
+    }
+
+
+    bool Step()
     {
 #if SC_PROFILE_SINGLE
         stopwatch.Start();
@@ -103,7 +114,7 @@ public class StatechartInstance : MonoBehaviour
             foreach (var a in ancestors)
                 if (exited.Contains(a))
                 {
-                    Move(active, exited, p.GetSource().GetAncestors(a));
+                    RemoveAndAdd(active, exited, p.GetSource().GetAncestors(a));
                     valid = false;
                     break;
                 }
@@ -112,7 +123,7 @@ public class StatechartInstance : MonoBehaviour
             {
                 valid_paths.Add(p);
                 entered.UnionWith(p.GetEntered());
-                Move(active, exited, p.GetExited());
+                RemoveAndAdd(active, exited, p.GetExited());
             }
         }
         // Remove any so far untouched parallel regions which have been implicitly exited
@@ -129,7 +140,7 @@ public class StatechartInstance : MonoBehaviour
                         break;
                     }
             }
-            Move(active, exited, ToRemove);
+            RemoveAndAdd(active, exited, ToRemove);
         }
         // Implicitly enter all so far untouched parallel regions
         {
@@ -177,7 +188,7 @@ public class StatechartInstance : MonoBehaviour
         stopwatch.Stop();
         execute.Accumulate(stopwatch);
         stopwatch.Reset();
-        if (prepare.SampleCount % 1000 == 0)
+        if (prepare.SampleCount % 1000 == 0) // Reduce clutter
             Debug.Log(prepare.GetStatistics(AccumulatedTime.TimeUnit.µs) + "\n"
                     + search.GetStatistics(AccumulatedTime.TimeUnit.µs) + "\n"
                     + validate.GetStatistics(AccumulatedTime.TimeUnit.µs) + "\n"
@@ -191,15 +202,17 @@ public class StatechartInstance : MonoBehaviour
         if (!config.IsValid())
             Debug.LogError("Invalid configuration in instance " + this + ":\n" + config.ToString());
 #endif
+
+        return exited.Count > 0 || entered.Count > 0;
     }
 
 
-    void DoActions(IEnumerable<ISCElement> objects, Action.Type type)
+    void DoActions(IEnumerable<ISCElement> sources, Action.Type type)
     {
 #if SC_LOG_FUNCTIONALITY
         var sb = new System.Text.StringBuilder();
 #endif
-        foreach(var o in objects)
+        foreach(var o in sources)
         {
             var action = new Action(o.ToString(), type);
             if (actions.TryGetValue(action, out EventHandler<ActionArgs> act))
@@ -229,7 +242,7 @@ public class StatechartInstance : MonoBehaviour
     }
 
 
-    void Move<T>(ISet<T> from, ISet<T> to, ICollection<T> collection)
+    void RemoveAndAdd<T>(ISet<T> from, ISet<T> to, ICollection<T> collection)
     {
         from.ExceptWith(collection);
         to.UnionWith(collection);
@@ -241,7 +254,7 @@ public class StatechartInstance : MonoBehaviour
         events.Add(e);
 
         if (machine.GetMode() == Statechart.Mode.On_Event)
-            Step();
+            SuperStep();
     }
 
 

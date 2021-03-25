@@ -18,6 +18,8 @@ public class Statechart : ScriptableObject
     TextAsset scxml = null;
     [SerializeField]
     Mode mode = Mode.Manual;
+    [SerializeField] [Range(1, 32)]
+    uint stepSize = 1;
 
     readonly List<Node> states = new List<Node>();
     readonly List<Transition> transitions = new List<Transition>();
@@ -163,20 +165,14 @@ public class Statechart : ScriptableObject
     }
 
 
-    public List<Node> GetStates()
+    public uint GetStepSize()
     {
-        return states;
+        return stepSize;
     }
 
 
-    public State GetState(string name)
+    State GetState(string name)
     {
         return (State)states.Find(new System.Predicate<Node>(n => n.name == name));
-    }
-
-
-    public List<Transition> GetTransitions()
-    {
-        return transitions;
     }
 }
