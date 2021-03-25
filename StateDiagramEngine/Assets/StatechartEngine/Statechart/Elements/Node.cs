@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 public abstract class Node : ISCElement
 {
@@ -18,7 +16,7 @@ public abstract class Node : ISCElement
     }
     
     
-    public abstract (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryEnter(Snapshot snap);
+    public abstract (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryEnter(Status snap);
 
 
     public bool IsChildOf(State state)

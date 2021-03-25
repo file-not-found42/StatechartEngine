@@ -1,8 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
-public class Path : System.IComparable<Path>
+public class CT : System.IComparable<CT>
 {
     readonly AtomicState source;
     
@@ -10,7 +8,7 @@ public class Path : System.IComparable<Path>
     readonly ISet<ISCElement> waypoints;
 
 
-    public Path(AtomicState s, ISet<ISCElement> waypoints, ISet<AtomicState> destinations)
+    public CT(AtomicState s, ISet<ISCElement> waypoints, ISet<AtomicState> destinations)
     {
         source = s;
         this.waypoints = waypoints;
@@ -38,7 +36,7 @@ public class Path : System.IComparable<Path>
     }
 
 
-    public int CompareTo(Path y)
+    public int CompareTo(CT y)
     {
         var scope = source.GetCommonAncestor(destinations);
         var scopeY = y.source.GetCommonAncestor(y.destinations);

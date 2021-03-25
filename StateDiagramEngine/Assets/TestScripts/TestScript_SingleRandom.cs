@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class TestScript_SingleRandom : MonoBehaviour
@@ -22,7 +20,7 @@ public class TestScript_SingleRandom : MonoBehaviour
         for (int i = 0; i < numEvents; i++)
         {
             int iEvent = Random.Range(0, event_types.Length);
-            stateMachine.AddEvent(new SCInternalEvent(event_types[iEvent]));
+            stateMachine.AddEvent(new SCEvent(event_types[iEvent]));
         }
     }
 }

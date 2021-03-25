@@ -27,7 +27,7 @@ public class Guard
     }
 
 
-    public bool Evaluate(Snapshot snap)
+    public bool Evaluate(Status snap)
     {
         //switch (op)
         //{

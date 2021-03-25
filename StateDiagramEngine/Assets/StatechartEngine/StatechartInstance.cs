@@ -1,14 +1,12 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 
 public class StatechartInstance : MonoBehaviour
 {
-    readonly HashSet<SCInternalEvent> events = new HashSet<SCInternalEvent>();
+    readonly HashSet<SCEvent> events = new HashSet<SCEvent>();
     readonly Dictionary<string, bool> properties = new Dictionary<string, bool>();
-    readonly Dictionary<Action, EventHandler<SCEventArgs>> actions = new Dictionary<Action, EventHandler<SCEventArgs>>();
+    readonly Dictionary<Action, EventHandler<ActionArgs>> actions = new Dictionary<Action, EventHandler<ActionArgs>>();
 
     Configuration config;
     
@@ -58,10 +56,10 @@ public class StatechartInstance : MonoBehaviour
 #endif
         // Preparations
 
-        var snap = new Snapshot(properties, events);
+        var snap = new Status(properties, events);
         events.Clear();
 
-        var paths = new List<Path>();
+        var paths = new List<CT>();
 
         var active = new HashSet<State>();
         var entered = new HashSet<State>();
@@ -81,7 +79,7 @@ public class StatechartInstance : MonoBehaviour
             
             var next = s.TryExit(snap);
             if (next != (null, null))
-                paths.Add(new Path(s, next.waypoints, next.destinations));
+                paths.Add(new CT(s, next.waypoints, next.destinations));
         }
 
 #if SC_PROFILE_SINGLE
@@ -96,7 +94,7 @@ public class StatechartInstance : MonoBehaviour
         paths.Sort();
 
         // Remove conflicting paths by priority
-        var valid_paths = new List<Path>();
+        var valid_paths = new List<CT>();
         foreach (var p in paths)
         {
             bool valid = true;
@@ -168,9 +166,9 @@ public class StatechartInstance : MonoBehaviour
         DoActions(entered, Action.Type.ENTRY);
 
         foreach (var s in exited)
-            events.Add(new SCInternalEvent("exited." + s.ToString()));
+            events.Add(new SCEvent("exited." + s.ToString()));
         foreach (var s in entered)
-            events.Add(new SCInternalEvent("entered." + s.ToString()));
+            events.Add(new SCEvent("entered." + s.ToString()));
 
         config.activeStates.ExceptWith(ExtractAtomic(exited));
         config.activeStates.UnionWith(ExtractAtomic(entered));
@@ -204,8 +202,8 @@ public class StatechartInstance : MonoBehaviour
         foreach(var o in objects)
         {
             var action = new Action(o.ToString(), type);
-            if (actions.TryGetValue(action, out EventHandler<SCEventArgs> act))
-                act?.Invoke(this, new SCEventArgs(o.ToString(), type));
+            if (actions.TryGetValue(action, out EventHandler<ActionArgs> act))
+                act?.Invoke(this, new ActionArgs(o.ToString(), type));
 #if SC_LOG_FUNCTIONALITY
             sb.Append(action);
             sb.Append(", ");
@@ -238,7 +236,7 @@ public class StatechartInstance : MonoBehaviour
     }
 
 
-    public void AddEvent(SCInternalEvent e)
+    public void AddEvent(SCEvent e)
     {
         events.Add(e);
 
@@ -247,7 +245,7 @@ public class StatechartInstance : MonoBehaviour
     }
 
 
-    public void Subscribe(string source, Action.Type type, EventHandler<SCEventArgs> function)
+    public void Subscribe(string source, Action.Type type, EventHandler<ActionArgs> function)
     {
         var key = new Action(source, type);
         if (actions.ContainsKey(key))
@@ -257,7 +255,7 @@ public class StatechartInstance : MonoBehaviour
     }
 
 
-    public void Unsubscribe(string source, Action.Type type, EventHandler<SCEventArgs> function)
+    public void Unsubscribe(string source, Action.Type type, EventHandler<ActionArgs> function)
     {
         var key = new Action(source, type);
         if (actions.ContainsKey(key))

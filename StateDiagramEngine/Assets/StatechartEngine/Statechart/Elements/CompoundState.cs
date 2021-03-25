@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class CompoundState : State
 {
@@ -11,7 +9,7 @@ public class CompoundState : State
     public CompoundState(string name, State parent) : base(name, parent) { }
 
 
-    public override (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryEnter(Snapshot snap)
+    public override (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryEnter(Status snap)
     {
         return entryChild.TryEnter(snap);
     }

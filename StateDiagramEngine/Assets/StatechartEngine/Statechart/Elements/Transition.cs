@@ -1,11 +1,9 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class Transition : ISCElement
 {
     public string name;
-    public SCInternalEvent trigger = null;
+    public SCEvent trigger = null;
     public Guard guard;
 
     public readonly Node destination;
@@ -18,7 +16,7 @@ public class Transition : ISCElement
     }
 
 
-    public (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryThrough(Snapshot snap)
+    public (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryThrough(Status snap)
     {
         bool active = (guard == null || guard.Evaluate(snap))
             && (trigger == null || snap.ContainsEvent(trigger));

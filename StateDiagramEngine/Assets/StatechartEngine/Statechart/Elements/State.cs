@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 public abstract class State : Node, System.IComparable<State>
@@ -6,7 +5,7 @@ public abstract class State : Node, System.IComparable<State>
     public State(string name, State parent) : base(name, parent) { }
 
 
-    public (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryExit(Snapshot snap)
+    public (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryExit(Status snap)
     {
         if (parent != null)
         {

@@ -1,16 +1,14 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
-public class Snapshot
+public class Status
 {
-    public readonly HashSet<SCInternalEvent> events;
+    public readonly HashSet<SCEvent> events;
     public readonly Dictionary<string, bool> properties;
 
-    public Snapshot(Dictionary<string, bool> ps, HashSet<SCInternalEvent> es)
+    public Status(Dictionary<string, bool> ps, HashSet<SCEvent> es)
     {
         properties = new Dictionary<string, bool>(ps);
-        events = new HashSet<SCInternalEvent>(es);
+        events = new HashSet<SCEvent>(es);
     }
 
 
@@ -21,7 +19,7 @@ public class Snapshot
     }
 
 
-    public bool ContainsEvent(SCInternalEvent ev)
+    public bool ContainsEvent(SCEvent ev)
     {
         return events.Contains(ev);
     }

@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class ParallelState : State
 {
@@ -10,7 +8,7 @@ public class ParallelState : State
     public ParallelState(string name, State parent) : base(name, parent) { }
 
 
-    public override (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryEnter(Snapshot snap)
+    public override (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryEnter(Status snap)
     {
         (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) result = (new HashSet<AtomicState>(), new HashSet<ISCElement>());
 

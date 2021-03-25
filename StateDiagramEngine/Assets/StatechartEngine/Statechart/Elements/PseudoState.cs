@@ -4,7 +4,7 @@ public class PseudoState : Node
 {
     public PseudoState(string name, State parent) : base(name, parent) { }
 
-    public override (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryEnter(Snapshot snap)
+    public override (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryEnter(Status snap)
     {
         foreach (var t in outTransitions.Values)
         {

@@ -40,7 +40,7 @@ public class AccumulatedTime
 
         builder.Append("Count: ");
         builder.Append(count);
-        builder.Append("\t Average: ");
+        builder.Append("\t Mean: ");
         builder.Append(ToUnit(sum, unit) / count);
         builder.Append("\t Minimum: ");
         builder.Append(ToUnit(min, unit));
@@ -64,7 +64,7 @@ public class AccumulatedTime
 }
 
 
-public class PerfUtil
+public class Utility
 {
     public static double ExtractSec(Stopwatch watch)
     {

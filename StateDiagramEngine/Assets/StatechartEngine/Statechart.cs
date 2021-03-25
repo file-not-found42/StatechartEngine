@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
 using UnityEngine;
@@ -36,7 +35,7 @@ public class Statechart : ScriptableObject
             ParseTransitions(doc.LastChild);
         }
         
-        var start = Root.TryEnter(new Snapshot(new Dictionary<string, bool>(), new HashSet<SCInternalEvent>()));
+        var start = Root.TryEnter(new Status(new Dictionary<string, bool>(), new HashSet<SCEvent>()));
         if (start == (null, null))
             throw new System.Exception("The statechart in " + scxml + " could not be initialized.");
 
@@ -147,7 +146,7 @@ public class Statechart : ScriptableObject
 
             Transition trans = new Transition(source.ToString() + "->" + target.ToString(), target)
             {
-                trigger = new SCInternalEvent(node.Attributes["event"].Value)
+                trigger = new SCEvent(node.Attributes["event"].Value)
             };
 
             if (node.Attributes["cond"] != null)
