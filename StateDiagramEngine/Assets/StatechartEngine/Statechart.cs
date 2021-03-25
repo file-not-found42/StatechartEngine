@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Xml;
 using UnityEngine;
 
-//[CreateAssetMenu(fileName = "Machine", menuName = "StateMachine", order = 3)]
+[CreateAssetMenu(fileName = "Machine", menuName = "StateMachine", order = 3)]
 public class Statechart : ScriptableObject
 {
     public enum Mode

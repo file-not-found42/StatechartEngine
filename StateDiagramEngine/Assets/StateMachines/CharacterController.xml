@@ -1,0 +1,90 @@
+<?scxml version="1.0" encoding="UTF-8" standalone="yes" xmlns="http://www.w3.org/2005/07/scxml"?>
+<state id="Root" default="Ground">
+	<state id="Ground" default="GroundEntry">
+		<transition event="" cond="isNotOnGround" target="Fall" priority="0"/>
+		
+		<pseudo	id="GroundEntry">
+			<transition event="SlidePressed" cond="FastEnoughForSlide" target="Slide" priority="0"/>
+			<transition event="" target="Control" priority="1"/>
+		</pseudo>
+		
+		<state id="Control" default="ControlEntry">
+			<transition event="Jump" target="Jump" priority="0"/>
+			<transition event="Dodge" target="Dodge" priority="1"/>
+			
+			<pseudo	id="ControlEntry">
+				<transition event="" cond="isAiming" target="Aim" priority="0"/>
+				<transition event="" target="NoAim" priority="1"/>
+			</pseudo>
+
+			<state id="NoAim" default="stand">
+				<transition event="" cond="isSprinting" target="Sprint" priority="0"/>
+				<transition event="" cond="isAiming" target="Aim" priority="1"/>
+				<transition event="" cond="isWalking" target="Walk" priority="2"/>
+				<transition event="" cond="isMoving" target="Run" priority="3"/>
+				<transition event="" target="Stand" priority="4"/>
+				
+				<state id="Stand"/>
+				
+				<state id="Run">
+					<transition event="Crouch" target="Slide" priority="0"/>
+				</state>
+				
+				<state id="Walk"/>
+				
+				<state id="Sprint">
+					<transition event="Crouch" target="Slide" priority="0"/>
+				</state>
+				
+				<state id="Crouch"/>
+			</state>
+			
+			<state id="Aim" default="AimStand">
+				<transition event="" cond="isSprinting" target="Sprint" priority="0"/>
+				<transition event="" cond="isNotAiming" target="NoAim" priority="1"/>
+				<transition event="" cond="isCrouching" target="AimCrouch" priority="2"/>
+				<transition event="" cond="isMoving" target="AimWalk" priority="3"/>
+				<transition event="" target="AimStand" priority="4"/>
+				
+				<state id="AimStand"/>
+				
+				<state id="AimWalk"/>
+				
+				<state id="AimCrouch"/>
+			</state>
+		</state>
+		
+		<state id="Slide">
+			<transition event="" cond="NotFastEnoughForSlide" target="Ground" priority="0"/>
+		</state>
+		
+		<state id="Dodge">
+			<transition event="DodgeComplete" target="Ground" priority="0"/>
+		</state>
+	<state id="Air" default="Fall">
+		<transition event="Dodge" target="AirDodge" priority="0"/>
+		
+		<state id="Fall">
+			<transition event="" cond="isAiming" target="Hover" priority="0"/>
+			<transition event="" cond="isOnGround" target="Ground" priority="1"/>
+		</state>
+		
+		<state id="Jump">
+			<transition event="" cond="isFalling" target="Fall" priority="0"/>
+			<transition event="" cond="isAiming" target="AimJump" priority="1"/>
+		</state>
+		
+		<state id="AimJump">
+			<transition event="" cond="isNotAiming" target="Jump" priority="0"/>
+			<transition event="" cond="isFalling" target="Hover" priority="1"/>
+		</state>
+		
+		<state id="Hover">
+			<transition event="" cond="isNotAiming" target="Fall" priority="0"/>
+		</state>
+		
+		<state id="AirDodge">
+			<transition event="DodgeComplete" target="Air" priority="0"/>
+		</state>
+	</state>
+</state>

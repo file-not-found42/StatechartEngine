@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/ManyRandom.unity
+    guid: 264c60fbf477e394ebfa9b976e11d414
   m_configObjects: {}

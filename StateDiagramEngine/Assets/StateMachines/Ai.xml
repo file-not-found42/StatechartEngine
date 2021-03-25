@@ -1,0 +1,65 @@
+<?scxml version="1.0" encoding="UTF-8" standalone="yes" xmlns="http://www.w3.org/2005/07/scxml"?>
+<state id="Root" default="Clueless">
+	<state id="Clueless" default="Overwatch">
+		<transition event="ClueFound" target="Suspicious" priority="0"/>
+		
+		<state id="WalkAround">
+			<transition event="TargetReached" target="Overwatch" priority="0"/>
+		</state>
+		
+		<state id="Overwatch">
+			<transition event="OverwatchDone" target="WalkAround" priority="0"/>
+		</state>
+	</state>
+	
+	<state id="Suspicious" default="Overwatch">
+		<transition event="EnemySpotted" target="Aware" priority="0"/>
+		
+		<state id="WalkToTarget">
+			<transition event="TargetReached" target="Investigate" priority="0"/>
+		</state>
+		
+		<state id="Investigate">
+			<transition event="PresenceConfirmed" target="Aware" priority="0"/>
+			<transition event="InvestigationFinished" target="Overwatch" priority="1"/>
+		</state>
+		
+		<state id="Overwatch">
+			<transition event="ClueFound" target="WalkToTarget" priority="0"/>
+		</state>
+	</state>
+	
+	<state id="Aware" default="NoLocation">
+	
+		<state id="NoLocation">
+			<transition event="EnemySpotted" target="EnemyInView" priority="0"/>
+		</state>
+		
+		<state id="ProbableLocation" default="SupressionFire">
+			<transition event="EnemySpotted" target="EnemyInView" priority="0"/>
+			
+			<state id="Wait"/>
+			
+			<state id="SupressionFire"/>
+			
+			<state id="ApproachLoaction">
+				<transition event="TargetReached" target="NoLocation" priority="0"/>
+			</state>
+		</state>
+		
+		<state id="UnderFire">
+			<transition event="EnemyDead" target="NoLocation" priority="0"/>
+		</state>
+		
+		<state id="EnemyInView" default="Wait">
+			<state id="Reload">
+				<transition event="ReloadComplete" target="Fire" priority="0"/>
+			</state>
+			
+			<state id="Fire">
+				<transition event="GunEmpty" target="Reload" priority="0"/>
+				<transition event="" cond="noEnemyInView" target="NoLocation" priority="1"/>
+			</state>
+		</state>
+	</state>
+</state>

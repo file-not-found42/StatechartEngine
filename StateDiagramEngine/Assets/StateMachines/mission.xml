@@ -1,0 +1,56 @@
+<?scxml version="1.0" encoding="UTF-8" standalone="yes" xmlns="http://www.w3.org/2005/07/scxml"?>
+<state id="Root" default="Active">
+	<parallel id="Active">
+		<state id="CharacterA" default="WaitingA">
+			<transition event="KilledA" target="DeadA" priority="0"/>
+			<transition event="ItemGivenB" target="FightA" priority="1"/>
+			
+			<state id="WaitingA">
+				<transition event="PlayerListenedA" target="EmployedA" priority="0"/>
+			</state>
+			
+			<state id="EmployedA">
+				<transition event="ItemGivenA" target="ItemA" priority="0"/>
+			</state>
+			
+			<state id="ItemA">
+				<transition event="KilledB" target="HappyA" priority="0"/>
+			</state>
+			
+			<state id="FightA"/>
+			
+			<state id="DeadA">
+				<transition event="KilledB" target="HappyPlayer" priority="0"/>
+			</state>
+		</state>
+		
+		<state id="CharacterB" default="WaitingB">
+			<transition event="KilledB" target="DeadB" priority="0"/>
+			<transition event="ItemGivenA" target="FightB" priority="1"/>
+			
+			<state id="WaitingB">
+				<transition event="PlayerListenedB" target="EmployedB" priority="0"/>
+			</state>
+			
+			<state id="EmployedB">
+				<transition event="ItemGivenB" target="ItemB" priority="0"/>
+			</state>
+			
+			<state id="ItemB">
+				<transition event="KilledA" target="HappyB" priority="0"/>
+			</state>
+			
+			<state id="FightB"/>
+			
+			<state id="DeadB">
+				<transition event="KilledA" target="HappyPlayer" priority="0"/>
+			</state>
+		</state>
+	<state id="Completed" default="HappyPlayer">
+		<state id="HappyA"/>
+		
+		<state id="HappyB"/>
+		
+		<state id="HappyPlayer"/>
+	</state>
+</state>
