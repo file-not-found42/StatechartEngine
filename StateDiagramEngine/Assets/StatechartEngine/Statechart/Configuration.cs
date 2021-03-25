@@ -42,7 +42,7 @@ public class Configuration
         else if (subtree is CompoundState compound)
         {
             long count = 0;
-            foreach (var c in compound.children)
+            foreach (var c in compound.components)
                 switch (IsValidInternal(c))
                 {
                     case Valid.Active:
@@ -62,7 +62,7 @@ public class Configuration
         else if (subtree is ParallelState parallel)
         {
             long count = 0;
-            foreach (var r in parallel.regions)
+            foreach (var r in parallel.components)
                 switch (IsValidInternal(r))
                 {
                     case Valid.Active:
@@ -74,7 +74,7 @@ public class Configuration
 
             if (count == 0)
                 return Valid.Inactive;
-            else if (count == parallel.regions.Count)
+            else if (count == parallel.components.Count)
                 return Valid.Active;
             else
                 return Valid.Error;

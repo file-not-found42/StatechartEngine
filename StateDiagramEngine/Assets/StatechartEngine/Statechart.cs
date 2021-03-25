@@ -87,11 +87,11 @@ public class Statechart : ScriptableObject
 
                     foreach (XmlNode n in node.ChildNodes)
                         if (n.Name == "state" || n.Name == "parallel")
-                            state.children.Add(GetState(n.Attributes["id"].Value));
+                            state.components.Add(GetState(n.Attributes["id"].Value));
 
                     // Set the entry state for a compound state
                     string entryState = node.Attributes["initial"].Value;
-                    state.entryChild = GetState(entryState);
+                    state.defaultComponent = GetState(entryState);
                 }
             }
             else if (node.Name == "parallel")
@@ -107,7 +107,7 @@ public class Statechart : ScriptableObject
 
                 foreach (XmlNode n in node.ChildNodes)
                     if (n.Name == "state" || n.Name == "parallel")
-                        state.regions.Add(GetState(n.Attributes["id"].Value));
+                        state.components.Add(GetState(n.Attributes["id"].Value));
             }
             else if (node.Name == "pseudo")
             {

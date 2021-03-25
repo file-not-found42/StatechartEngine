@@ -86,7 +86,7 @@ public class StatechartInstance : MonoBehaviour
 
         foreach (AtomicState s in config.activeStates)
         {
-            active.UnionWith(s.GetAncestors(null));
+            active.UnionWith(s.GetSuperstates(null));
             
             var next = s.TryExit(snap);
             if (next != (null, null))
@@ -109,12 +109,12 @@ public class StatechartInstance : MonoBehaviour
         foreach (var p in paths)
         {
             bool valid = true;
-            var ancestors = p.GetSource().GetAncestors(null);
+            var ancestors = p.GetSource().GetSuperstates(null);
             ancestors.Reverse();
             foreach (var a in ancestors)
                 if (exited.Contains(a))
                 {
-                    RemoveAndAdd(active, exited, p.GetSource().GetAncestors(a));
+                    RemoveAndAdd(active, exited, p.GetSource().GetSuperstates(a));
                     valid = false;
                     break;
                 }
@@ -131,12 +131,12 @@ public class StatechartInstance : MonoBehaviour
             var ToRemove = new HashSet<State>();
             foreach (var act in active)
             {
-                var ancestors = act.GetAncestors(null);
+                var ancestors = act.GetSuperstates(null);
                 ancestors.Reverse();
                 foreach (var a in ancestors)
                     if (exited.Contains(a))
                     {
-                        ToRemove.UnionWith(act.GetAncestors(a));
+                        ToRemove.UnionWith(act.GetSuperstates(a));
                         break;
                     }
             }
@@ -147,7 +147,7 @@ public class StatechartInstance : MonoBehaviour
             var regions = new HashSet<State>();
             foreach (var e in entered)
                 if (e is ParallelState p)
-                    regions.UnionWith(p.regions);
+                    regions.UnionWith(p.components);
 
             regions.ExceptWith(active);
             regions.ExceptWith(entered);
@@ -292,7 +292,7 @@ public class StatechartInstance : MonoBehaviour
     public bool IsStateActive(string name)
     {
         foreach (var s in config.activeStates)
-            foreach (var a in s.GetAncestors(null))
+            foreach (var a in s.GetSuperstates(null))
                 if (a.ToString().Equals(name))
                     return true;
 

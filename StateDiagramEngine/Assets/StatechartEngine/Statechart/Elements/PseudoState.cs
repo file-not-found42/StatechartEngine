@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 public class PseudoState : Node
 {
-    public PseudoState(string name, State parent) : base(name, parent) { }
+    public PseudoState(string name, State superstate) : base(name, superstate) { }
 
     public override (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryEnter(Status snap)
     {

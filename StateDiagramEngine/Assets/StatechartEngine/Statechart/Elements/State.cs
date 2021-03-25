@@ -2,14 +2,14 @@ using System.Collections.Generic;
 
 public abstract class State : Node, System.IComparable<State>
 {
-    public State(string name, State parent) : base(name, parent) { }
+    public State(string name, State superstate) : base(name, superstate) { }
 
 
     public (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryExit(Status snap)
     {
-        if (parent != null)
+        if (superstate != null)
         {
-            var next = parent.TryExit(snap);
+            var next = superstate.TryExit(snap);
             if (next != (null, null))
                 return next;
         }
@@ -29,36 +29,36 @@ public abstract class State : Node, System.IComparable<State>
     /// </summary>
     /// <param name="limit">The limit up to which the list will be computed</param>
     /// <returns>The list of states which contain the state</returns>
-    public List<State> GetAncestors(in State limit)
+    public List<State> GetSuperstates(in State limit)
     {
         if (this == limit)
             return new List<State> { };
-        else if (parent == null)
+        else if (superstate == null)
             return new List<State> { this };
         else
         {
-            var result = parent.GetAncestors(limit);
+            var result = superstate.GetSuperstates(limit);
             result.Add(this);
             return result;
         }
     }
 
 
-    public State GetCommonAncestor(IEnumerable<State> others)
+    public State GetCommonSuperstate(IEnumerable<State> others)
     {
-        var ancestry = GetAncestors(null);
-        var scope = parent;
+        var superstates = GetSuperstates(null);
+        var scope = superstate;
 
         foreach (var s in others)
         {
-            for (int i = ancestry.Count - 1; i >= 0; i--)
-                if (s.parent == ancestry[i])
+            for (int i = superstates.Count - 1; i >= 0; i--)
+                if (s.superstate == superstates[i])
                 {
-                    scope = ancestry[i];
+                    scope = superstates[i];
                     break;
                 }
                 else
-                    ancestry.RemoveAt(i);
+                    superstates.RemoveAt(i);
         }
 
         return scope;
@@ -67,9 +67,9 @@ public abstract class State : Node, System.IComparable<State>
 
     public int CompareTo(State other)
     {
-        if (other.IsChildOf(this))
+        if (other.IsIn(this))
             return -1;
-        else if (IsChildOf(other))
+        else if (IsIn(other))
             return 1;
         else
             return 0;

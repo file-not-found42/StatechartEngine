@@ -3,33 +3,33 @@ using System.Collections.Generic;
 public abstract class Node : ISCElement
 {
     public readonly string name;
-    public readonly State parent = null;
+    public readonly State superstate = null;
 
     // Sorted by priority
     public readonly SortedList<int, Transition> outTransitions = new SortedList<int, Transition>();
 
 
-    public Node(string name, State parent)
+    public Node(string name, State superstate)
     {
         this.name = name;
-        this.parent = parent;
+        this.superstate = superstate;
     }
     
     
     public abstract (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryEnter(Status snap);
 
 
-    public bool IsChildOf(State state)
+    public bool IsIn(State state)
     {
-        if (parent == null)
+        if (superstate == null)
             return this == state;
 
-        return this == state || parent.IsChildOf(state);
+        return this == state || superstate.IsIn(state);
     }
     
     
     public override string ToString()
     {
-        return parent == null ? name : parent.ToString() + "." + name;
+        return superstate == null ? name : superstate.ToString() + "." + name;
     }
 }

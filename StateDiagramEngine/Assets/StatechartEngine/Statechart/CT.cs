@@ -18,11 +18,11 @@ public class CT : System.IComparable<CT>
 
     public ISet<State> GetEntered()
     {
-        var scope = source.GetCommonAncestor(destinations);
+        var scope = source.GetCommonSuperstate(destinations);
         var entered = new HashSet<State>();
 
         foreach (var d in destinations)
-            entered.UnionWith(d.GetAncestors(scope));
+            entered.UnionWith(d.GetSuperstates(scope));
 
         return entered;
     }
@@ -30,19 +30,19 @@ public class CT : System.IComparable<CT>
 
     public ISet<State> GetExited()
     {
-        var scope = source.GetCommonAncestor(destinations);
+        var scope = source.GetCommonSuperstate(destinations);
 
-        return new HashSet<State>(source.GetAncestors(scope));
+        return new HashSet<State>(source.GetSuperstates(scope));
     }
 
 
     public int CompareTo(CT y)
     {
-        var scope = source.GetCommonAncestor(destinations);
-        var scopeY = y.source.GetCommonAncestor(y.destinations);
+        var scope = source.GetCommonSuperstate(destinations);
+        var scopeY = y.source.GetCommonSuperstate(y.destinations);
 
-        var ances = scope.GetAncestors(null);
-        var ancesY = scopeY.GetAncestors(null);
+        var ances = scope.GetSuperstates(null);
+        var ancesY = scopeY.GetSuperstates(null);
 
         if (ances.Contains(scopeY))
             return -1;
