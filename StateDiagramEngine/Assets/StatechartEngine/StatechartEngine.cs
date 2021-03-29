@@ -77,7 +77,7 @@ public class StatechartEngine : MonoBehaviour
         accTime.Accumulate(stopwatch);
         stopwatch.Reset();
         if (accTime.SampleCount % 100 == 0)
-            Debug.Log(accTime.GetStatistics(AccumulatedTime.TimeUnit.µs));
+            Debug.Log("Executing " + updateInstances.Count + " instances.\n" + accTime.GetStatistics(AccumulatedTime.TimeUnit.µs));
 #endif
     }
 

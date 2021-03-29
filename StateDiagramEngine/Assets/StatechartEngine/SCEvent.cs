@@ -1,6 +1,7 @@
 public class SCEvent
 {
     public readonly string Type;
+    public static SCEvent emptyEvent = new SCEvent("");
 
 
     public SCEvent(string newType)

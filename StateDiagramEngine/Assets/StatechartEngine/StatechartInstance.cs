@@ -189,10 +189,11 @@ public class StatechartInstance : MonoBehaviour
         execute.Accumulate(stopwatch);
         stopwatch.Reset();
         if (prepare.SampleCount % 1000 == 0) // Reduce clutter
-            Debug.Log(prepare.GetStatistics(AccumulatedTime.TimeUnit.탎) + "\n"
-                    + search.GetStatistics(AccumulatedTime.TimeUnit.탎) + "\n"
-                    + validate.GetStatistics(AccumulatedTime.TimeUnit.탎) + "\n"
-                    + execute.GetStatistics(AccumulatedTime.TimeUnit.탎));
+            Debug.Log(
+                "Prepare: " + prepare.GetStatistics(AccumulatedTime.TimeUnit.탎) + 
+                "\nSearch: " + search.GetStatistics(AccumulatedTime.TimeUnit.탎) + 
+                "\nValidate: " + validate.GetStatistics(AccumulatedTime.TimeUnit.탎) + 
+                "\nExecute: " + execute.GetStatistics(AccumulatedTime.TimeUnit.탎));
 #endif
 
 #if SC_LOG_FUNCTIONALITY

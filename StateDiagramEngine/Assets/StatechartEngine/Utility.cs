@@ -94,7 +94,7 @@ public class AccumulatedTime
         builder.Append("Count: ");
         builder.Append(count);
        
-        builder.Append("\n Total:    Mean ");
+        builder.Append("\n    Total:     Mean ");
         builder.Append(string.Format("{0:0.0}", ToUnit(sum, unit) / count));
         builder.Append(" µs,    Min ");
         builder.Append(string.Format("{0:0.0}", ToUnit(min, unit)));
@@ -106,7 +106,7 @@ public class AccumulatedTime
         {
             var stats = samples.GetStatistics();
 
-            builder.Append("\n Last 5000:    Mean ");
+            builder.Append("\n    Last 5000: Mean ");
             builder.Append(string.Format("{0:0.0}", stats.mean));
             builder.Append(" µs,    Min ");
             builder.Append(string.Format("{0:0.0}", stats.min));

@@ -19,7 +19,7 @@ public class Transition : ISCElement
     public (ISet<AtomicState> destinations, ISet<ISCElement> waypoints) TryThrough(Status snap)
     {
         bool active = (guard == null || guard.Evaluate(snap))
-            && (trigger == null || snap.ContainsEvent(trigger));
+            && (trigger == SCEvent.emptyEvent || snap.ContainsEvent(trigger));
 
         if (!active)
             return (null, null);

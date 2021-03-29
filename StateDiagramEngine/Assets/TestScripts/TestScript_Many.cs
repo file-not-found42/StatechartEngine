@@ -10,6 +10,19 @@ public class TestScript_Many : MonoBehaviour
 
     void Start()
     {
+        var args = System.Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length - 1; i++)
+            if (args[i] == "--instance_count")
+                try
+                {
+                    instanceCount = long.Parse(args[i + 1]);
+                }
+                catch (System.Exception)
+                {
+                    Debug.LogError("Invalid number format for the argument '--instance_count'");
+                    return;
+                }
+
         for (long i = 0; i < instanceCount; i++)
         {
             var go = new GameObject();

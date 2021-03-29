@@ -51,7 +51,7 @@ public class Statechart : ScriptableObject
         if (node.Name == "state" || node.Name == "parallel" || node.Name == "pseudo")
         {
             string name = node.Attributes["id"].Value;
-            State parent = Root == null ? null : GetState(node.ParentNode.Attributes["id"].Value);
+            State parent = Root == null ? null : (State)GetNode(node.ParentNode.Attributes["id"].Value);
             
             if (node.Name == "state")
             {
@@ -87,11 +87,11 @@ public class Statechart : ScriptableObject
 
                     foreach (XmlNode n in node.ChildNodes)
                         if (n.Name == "state" || n.Name == "parallel")
-                            state.components.Add(GetState(n.Attributes["id"].Value));
+                            state.components.Add((State)GetNode(n.Attributes["id"].Value));
 
                     // Set the entry state for a compound state
                     string entryState = node.Attributes["initial"].Value;
-                    state.defaultComponent = GetState(entryState);
+                    state.defaultComponent = GetNode(entryState);
                 }
             }
             else if (node.Name == "parallel")
@@ -107,7 +107,7 @@ public class Statechart : ScriptableObject
 
                 foreach (XmlNode n in node.ChildNodes)
                     if (n.Name == "state" || n.Name == "parallel")
-                        state.components.Add(GetState(n.Attributes["id"].Value));
+                        state.components.Add((State)GetNode(n.Attributes["id"].Value));
             }
             else if (node.Name == "pseudo")
             {
@@ -143,8 +143,8 @@ public class Statechart : ScriptableObject
             if (node.Attributes["event"] == null)
                 Debug.LogError("Error: Missing trigger in transition in " + scxml.name);
 
-            Node source = GetState(node.ParentNode.Attributes["id"].Value);
-            Node target = GetState(node.Attributes["target"].Value);
+            Node source = GetNode(node.ParentNode.Attributes["id"].Value);
+            Node target = GetNode(node.Attributes["target"].Value);
 
             Transition trans = new Transition(source.ToString() + "->" + target.ToString(), target)
             {
@@ -171,8 +171,8 @@ public class Statechart : ScriptableObject
     }
 
 
-    State GetState(string name)
+    Node GetNode(string name)
     {
-        return (State)states.Find(new System.Predicate<Node>(n => n.name == name));
+        return states.Find(new System.Predicate<Node>(n => n.name == name));
     }
 }

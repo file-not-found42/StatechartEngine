@@ -1,0 +1,85 @@
+<?scxml version="1.0" encoding="UTF-8" standalone="yes" xmlns="http://www.w3.org/2005/07/scxml"?>
+<state id="Root" initial="Alpha">
+    <state id="Alpha" initial="AlphaEntry">
+        <transition event="" cond="isNot_1" target="Four" priority="0"/>
+
+        <pseudo	id="AlphaEntry">
+            <transition event="Event_1" cond="is_2" target="Two" priority="0"/>
+            <transition event="" target="One" priority="1"/>
+        </pseudo>
+
+        <parallel id="One" initial="OneEntry">
+            <transition event="Event_2" target="Five" priority="0"/>
+            <transition event="Event_3" target="Three" priority="1"/>
+
+            <state id="A" initial="I">
+                <transition event="" cond="is_3" target="IV" priority="0"/>
+                <transition event="" cond="is_4" target="B" priority="1"/>
+                <transition event="" cond="is_5" target="III" priority="2"/>
+                <transition event="" cond="is_6" target="II" priority="3"/>
+
+                <state id="I"/>
+
+                <state id="II">
+                    <transition event="Event_4" target="Two" priority="0"/>
+                </state>
+
+                <state id="III"/>
+
+                <state id="IV">
+                    <transition event="Event_4" target="Two" priority="0"/>
+                </state>
+
+                <state id="V"/>
+            </state>
+
+            <state id="B" initial="VI">
+                <transition event="" cond="is_3" target="IV" priority="0"/>
+                <transition event="" cond="isNot_4" target="A" priority="1"/>
+                <transition event="" cond="is_7" target="VIII" priority="2"/>
+                <transition event="" cond="is_6" target="VII" priority="3"/>
+
+                <state id="VI"/>
+
+                <state id="VII"/>
+
+                <state id="VIII"/>
+            </state>
+        </parallel>
+            
+        <state id="Two">
+            <transition event="" cond="isNot_2" target="Alpha" priority="0"/>
+        </state>
+
+        <state id="Three">
+            <transition event="Event_5" target="Alpha" priority="0"/>
+        </state>
+    </state>
+    
+    <state id="Beta" initial="Four">
+        <transition event="Event_3" target="Eight" priority="0"/>
+
+        <state id="Four">
+            <transition event="" cond="is_4" target="Seven" priority="0"/>
+            <transition event="" cond="is_1" target="Alpha" priority="1"/>
+        </state>
+
+        <state id="Five">
+            <transition event="" cond="is_8" target="Four" priority="0"/>
+            <transition event="" cond="is_4" target="Six" priority="1"/>
+        </state>
+
+        <state id="Six">
+            <transition event="" cond="isNot_4" target="Five" priority="0"/>
+            <transition event="" cond="is_8" target="Seven" priority="1"/>
+        </state>
+
+        <state id="Seven">
+            <transition event="" cond="isNot_4" target="Four" priority="0"/>
+        </state>
+
+        <state id="Eight">
+            <transition event="Event_5" target="Beta" priority="0"/>
+        </state>
+    </state>
+</state>
