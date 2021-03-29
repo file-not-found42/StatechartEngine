@@ -70,11 +70,13 @@ public class StatechartInstance : MonoBehaviour
         var snap = new Status(properties, events);
         events.Clear();
 
-        var paths = new List<CT>();
+        var CTs = new List<CT>();
 
-        var active = new HashSet<State>();
         var entered = new HashSet<State>();
         var exited = new HashSet<State>();
+        var active = new HashSet<State>();
+        foreach (var s in config.activeStates)
+            active.UnionWith(s.GetSuperstates(null));
 
 #if SC_PROFILE_SINGLE
         stopwatch.Stop();
@@ -85,12 +87,10 @@ public class StatechartInstance : MonoBehaviour
         // Search Paths
 
         foreach (AtomicState s in config.activeStates)
-        {
-            active.UnionWith(s.GetSuperstates(null));
-            
+        {   
             var next = s.TryExit(snap);
             if (next != (null, null))
-                paths.Add(new CT(s, next.waypoints, next.destinations));
+                CTs.Add(new CT(s, next.waypoints, next.destinations));
         }
 
 #if SC_PROFILE_SINGLE
@@ -102,45 +102,42 @@ public class StatechartInstance : MonoBehaviour
         // Validate Paths
 
         // Sort by scope high to low
-        paths.Sort();
+        CTs.Sort();
 
         // Remove conflicting paths by priority
-        var valid_paths = new List<CT>();
-        foreach (var p in paths)
+        var full_CTs = new List<CT>();
+        foreach (var ct in CTs)
         {
-            bool valid = true;
-            var ancestors = p.GetSource().GetSuperstates(null);
-            ancestors.Reverse();
-            foreach (var a in ancestors)
-                if (exited.Contains(a))
-                {
-                    RemoveAndAdd(active, exited, p.GetSource().GetSuperstates(a));
-                    valid = false;
-                    break;
-                }
-
-            if (valid)
+            if (!active.IsSupersetOf(ct.GetSource().GetSuperstates(null)))
             {
-                valid_paths.Add(p);
-                entered.UnionWith(p.GetEntered());
-                RemoveAndAdd(active, exited, p.GetExited());
+                var ct_exits = ct.GetExited();
+                var ct_enters = ct.GetEntered();
+
+                active.ExceptWith(ct_exits);
+                exited.UnionWith(ct_exits);
+                entered.UnionWith(ct_enters);
+
+                full_CTs.Add(ct);
             }
         }
         // Remove any so far untouched parallel regions which have been implicitly exited
         {
             var ToRemove = new HashSet<State>();
+            
             foreach (var act in active)
             {
                 var ancestors = act.GetSuperstates(null);
                 ancestors.Reverse();
                 foreach (var a in ancestors)
-                    if (exited.Contains(a))
+                    if (!active.Contains(a))
                     {
                         ToRemove.UnionWith(act.GetSuperstates(a));
                         break;
                     }
             }
-            RemoveAndAdd(active, exited, ToRemove);
+
+            active.ExceptWith(ToRemove);
+            exited.UnionWith(ToRemove);
         }
         // Implicitly enter all so far untouched parallel regions
         {
@@ -159,6 +156,7 @@ public class StatechartInstance : MonoBehaviour
                 {
                     entered.UnionWith(next.destinations);
                 }
+                // else: ERROR (Limitation)
             }
         }
 
@@ -172,7 +170,7 @@ public class StatechartInstance : MonoBehaviour
 
         DoActions(exited, Action.Type.EXIT);
         DoActions(active, Action.Type.STAY);
-        foreach (var p in valid_paths)
+        foreach (var p in full_CTs)
             DoActions(p.GetWaypoints(), Action.Type.PASSTHROUGH);
         DoActions(entered, Action.Type.ENTRY);
 
@@ -240,13 +238,6 @@ public class StatechartInstance : MonoBehaviour
                 result.Add(a);
 
         return result;
-    }
-
-
-    void RemoveAndAdd<T>(ISet<T> from, ISet<T> to, ICollection<T> collection)
-    {
-        from.ExceptWith(collection);
-        to.UnionWith(collection);
     }
 
 
