@@ -250,6 +250,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74ede156cc80ab1478d7bafbe430b9e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  event_count: 6
+  property_count: 12
 --- !u!114 &434506774
 MonoBehaviour:
   m_ObjectHideFlags: 0

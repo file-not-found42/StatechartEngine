@@ -90,8 +90,13 @@ public class Statechart : ScriptableObject
                             state.components.Add((State)GetNode(n.Attributes["id"].Value));
 
                     // Set the entry state for a compound state
+                    if (node.Attributes["initial"] == null)
+                        Debug.LogError("Error: Missing default state of " + name + " in " + scxml.name);
                     string entryState = node.Attributes["initial"].Value;
-                    state.defaultComponent = GetNode(entryState);
+                    var def = GetNode(entryState);
+                    if (def == null)
+                        Debug.LogError("Error: Default state of " + name + " in " + scxml.name + " does not exist");
+                    state.defaultComponent = def;
                 }
             }
             else if (node.Name == "parallel")

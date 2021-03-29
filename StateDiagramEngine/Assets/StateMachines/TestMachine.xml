@@ -8,48 +8,89 @@
             <transition event="" target="One" priority="1"/>
         </pseudo>
 
-        <parallel id="One" initial="OneEntry">
+        <state id="One" initial="A">
             <transition event="Event_2" target="Five" priority="0"/>
             <transition event="Event_3" target="Three" priority="1"/>
 
-            <state id="A" initial="I">
-                <transition event="" cond="is_3" target="IV" priority="0"/>
-                <transition event="" cond="is_4" target="B" priority="1"/>
-                <transition event="" cond="is_5" target="III" priority="2"/>
-                <transition event="" cond="is_6" target="II" priority="3"/>
+            <parallel id="A" initial="I">
+                <transition event="Event_6" cond="is_3" target="IV" priority="0"/>
+                <transition event="Event_6" cond="is_4" target="B" priority="1"/>
+                <transition event="Event_6" cond="is_5" target="III" priority="2"/>
+                <transition event="Event_6" cond="is_6" target="II" priority="3"/>
 
-                <state id="I"/>
+                <state id="I" initial="2">
+                    <state id="1">
+                        <transition event="Event_1" cond="is_5" target="3" priority="0"/>
+                        <transition event="Event_2" cond="is_2" target="2" priority="1"/>
+                    </state>
 
-                <state id="II">
-                    <transition event="Event_4" target="Two" priority="0"/>
+                    <state id="2">
+                        <transition event="" cond="is_1" target="1" priority="0"/>
+                        <transition event="" cond="is_4" target="3" priority="1"/>
+                    </state>
+
+                    <state id="3">
+                        <transition event="Event_4" cond="isNot_1" target="2" priority="0"/>
+                        <transition event="Event_3" cond="is_4" target="Seven" priority="1"/>
+                    </state>
                 </state>
 
-                <state id="III"/>
+                <state id="II" initial="4">
+                    <transition event="Event_4" target="Three" priority="0"/>
 
-                <state id="IV">
-                    <transition event="Event_4" target="Two" priority="0"/>
+                    <state id="4">
+                        <transition event="Event_5" cond="is_1" target="6" priority="0"/>
+                        <transition event="Event_3" cond="is_1" target="5" priority="1"/>
+                    </state>
+
+                    <state id="5">
+                        <transition event="Event_1" cond="is_1" target="4" priority="0"/>
+                        <transition event="Event_2" cond="is_7" target="6" priority="1"/>
+                    </state>
+
+                    <state id="6">
+                        <transition event="" cond="isNot_2" target="4" priority="0"/>
+                        <transition event="" cond="is_6" target="5" priority="1"/>
+                    </state>
                 </state>
 
-                <state id="V"/>
-            </state>
+                <state id="III" initial="9">
+                    <transition event="Event_1" target="Four" priority="0"/>
 
-            <state id="B" initial="VI">
+                    <state id="7">
+                        <transition event="" cond="is_4" target="8" priority="0"/>
+                        <transition event="" cond="is_1" target="9" priority="1"/>
+                    </state>
+
+                    <state id="8">
+                        <transition event="Event_3" cond="is_3" target="7" priority="0"/>
+                        <transition event="" cond="is_2" target="9" priority="1"/>
+                    </state>
+
+                    <state id="9">
+                        <transition event="" cond="isNot_4" target="7" priority="0"/>
+                        <transition event="Event_2" cond="is_4" target="8" priority="1"/>
+                    </state>
+                </state>
+            </parallel>
+
+            <state id="B" initial="IV">
                 <transition event="" cond="is_3" target="IV" priority="0"/>
                 <transition event="" cond="isNot_4" target="A" priority="1"/>
-                <transition event="" cond="is_7" target="VIII" priority="2"/>
-                <transition event="" cond="is_6" target="VII" priority="3"/>
+                <transition event="" cond="is_7" target="VI" priority="2"/>
+                <transition event="" cond="is_6" target="V" priority="3"/>
+
+                <state id="IV"/>
+
+                <state id="V"/>
 
                 <state id="VI"/>
-
-                <state id="VII"/>
-
-                <state id="VIII"/>
             </state>
-        </parallel>
-            
-        <state id="Two">
-            <transition event="" cond="isNot_2" target="Alpha" priority="0"/>
         </state>
+            
+        <pseudo id="Two">
+            <transition event="" cond="isNot_2" target="Beta" priority="0"/>
+        </pseudo>
 
         <state id="Three">
             <transition event="Event_5" target="Alpha" priority="0"/>

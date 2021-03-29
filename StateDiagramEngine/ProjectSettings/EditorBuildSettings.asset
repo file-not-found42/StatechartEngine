@@ -6,9 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/PerfMany.unity
-    guid: 264c60fbf477e394ebfa9b976e11d414
-  - enabled: 1
     path: Assets/Scenes/PerfSingle.unity
     guid: b8b99d834ede25a46bbbf5a08b6be93f
+  - enabled: 1
+    path: Assets/Scenes/PerfMany.unity
+    guid: 264c60fbf477e394ebfa9b976e11d414
   m_configObjects: {}
