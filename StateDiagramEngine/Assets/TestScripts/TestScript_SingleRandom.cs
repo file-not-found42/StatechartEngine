@@ -7,7 +7,7 @@ public class TestScript_SingleRandom : MonoBehaviour
     readonly static System.Random rand = new System.Random();
 
     [SerializeField]
-    long event_count = 6;
+    long event_count = 0;
     [SerializeField]
     long property_count = 12;
 

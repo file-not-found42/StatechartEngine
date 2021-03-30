@@ -236,7 +236,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   statechart: {fileID: 11400000, guid: 8006eeb87c8fee04983acb5ddadb49a9, type: 2}
-  instanceCount: 100
+  instanceCount: 1000
 --- !u!4 &1328920500
 Transform:
   m_ObjectHideFlags: 0

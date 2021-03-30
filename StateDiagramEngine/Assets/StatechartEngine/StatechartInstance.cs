@@ -159,6 +159,8 @@ public class StatechartInstance : MonoBehaviour
                 // else: ERROR (Limitation)
             }
         }
+        // Cleanup
+        entered.ExceptWith(active);
 
 #if SC_PROFILE_SINGLE
         stopwatch.Stop();
