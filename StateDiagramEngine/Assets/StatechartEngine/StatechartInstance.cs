@@ -4,11 +4,9 @@ using UnityEngine;
 
 public class StatechartInstance : MonoBehaviour
 {
-    readonly HashSet<SCEvent> events = new HashSet<SCEvent>();
-    readonly Dictionary<string, bool> properties = new Dictionary<string, bool>();
     readonly Dictionary<Action, EventHandler<ActionArgs>> actions = new Dictionary<Action, EventHandler<ActionArgs>>();
 
-    Configuration config;
+    Status status;
     
     [SerializeField]
     Statechart machine;
@@ -33,7 +31,11 @@ public class StatechartInstance : MonoBehaviour
         if (machine == null)
             Debug.LogError(this + " does not have a statechart attached!");
         else
-            config = machine.Instantiate();
+            status = machine.Instantiate();
+
+#if SC_LOG_FUNCTIONALITY
+        Debug.Log(this + " was initialized to " + status.ToString());
+#endif
     }
 
 
@@ -67,15 +69,14 @@ public class StatechartInstance : MonoBehaviour
 #endif
         // Preparations
 
-        var snap = new Status(properties, events);
-        events.Clear();
+        status.events.Clear();
 
         var CTs = new List<CT>();
 
         var entered = new HashSet<State>();
         var exited = new HashSet<State>();
         var active = new HashSet<State>();
-        foreach (var s in config.activeStates)
+        foreach (var s in status.b_configuration)
             active.UnionWith(s.GetSuperstates(null));
 
 #if SC_PROFILE_SINGLE
@@ -86,9 +87,9 @@ public class StatechartInstance : MonoBehaviour
 #endif
         // Search Paths
 
-        foreach (AtomicState s in config.activeStates)
+        foreach (AtomicState s in status.b_configuration)
         {   
-            var next = s.TryExit(snap);
+            var next = s.TryExit(status);
             if (next != (null, null))
                 CTs.Add(new CT(s, next.waypoints, next.destinations));
         }
@@ -105,20 +106,19 @@ public class StatechartInstance : MonoBehaviour
         CTs.Sort();
 
         // Remove conflicting paths by priority
-        var full_CTs = new List<CT>();
-        foreach (var ct in CTs)
+        for (int i = 0; i < CTs.Count; i++)
         {
-            if (!active.IsSupersetOf(ct.GetSource().GetSuperstates(null)))
+            if (active.IsSupersetOf(CTs[i].GetSource().GetSuperstates(null)))
             {
-                var ct_exits = ct.GetExited();
-                var ct_enters = ct.GetEntered();
+                var ct_exits = CTs[i].GetExited();
+                var ct_enters = CTs[i].GetEntered();
 
                 active.ExceptWith(ct_exits);
                 exited.UnionWith(ct_exits);
                 entered.UnionWith(ct_enters);
-
-                full_CTs.Add(ct);
             }
+            else
+                CTs[i] = null;
         }
         // Remove any so far untouched parallel regions which have been implicitly exited
         {
@@ -151,7 +151,7 @@ public class StatechartInstance : MonoBehaviour
 
             foreach (var r in regions)
             {
-                var next = r.TryEnter(snap);
+                var next = r.TryEnter(status);
                 if (next != (null, null))
                 {
                     entered.UnionWith(next.destinations);
@@ -172,17 +172,18 @@ public class StatechartInstance : MonoBehaviour
 
         DoActions(exited, Action.Type.EXIT);
         DoActions(active, Action.Type.STAY);
-        foreach (var p in full_CTs)
-            DoActions(p.GetWaypoints(), Action.Type.PASSTHROUGH);
+        foreach (var p in CTs)
+            if (p != null)
+                DoActions(p.GetWaypoints(), Action.Type.PASSTHROUGH);
         DoActions(entered, Action.Type.ENTRY);
 
         foreach (var s in exited)
-            events.Add(new SCEvent("exited." + s.ToString()));
+            status.events.Add(new SCEvent("exit." + s.ToString()));
         foreach (var s in entered)
-            events.Add(new SCEvent("entered." + s.ToString()));
+            status.events.Add(new SCEvent("enter." + s.ToString()));
 
-        config.activeStates.ExceptWith(ExtractAtomic(exited));
-        config.activeStates.UnionWith(ExtractAtomic(entered));
+        status.b_configuration.ExceptWith(ExtractAtomic(exited));
+        status.b_configuration.UnionWith(ExtractAtomic(entered));
 
 #if SC_PROFILE_SINGLE
         stopwatch.Stop();
@@ -197,11 +198,12 @@ public class StatechartInstance : MonoBehaviour
 #endif
 
 #if SC_LOG_FUNCTIONALITY
-        Debug.Log(this + " is now in " + config.ToString());
+        Debug.Log(this + " is now in " + status.ToString());
 #endif
+
 #if SC_DEBUG
-        if (!config.IsValid())
-            Debug.LogError("Invalid configuration in instance " + this + ":\n" + config.ToString());
+        if (!status.IsValid())
+            Debug.LogError("Invalid configuration in instance " + this + ":\n" + status.ToString());
 #endif
 
         return exited.Count > 0 || entered.Count > 0;
@@ -245,7 +247,7 @@ public class StatechartInstance : MonoBehaviour
 
     public void AddEvent(SCEvent e)
     {
-        events.Add(e);
+        status.events.Add(e);
 
 #if SC_LOG_FUNCTIONALITY
         Debug.Log("Added event \"" + e.ToString() + "\" to statechart " + this);
@@ -276,7 +278,7 @@ public class StatechartInstance : MonoBehaviour
 
     public void SetProperty(string name, bool value)
     {
-        properties[name] = value;
+        status.properties[name] = value;
 
 #if SC_LOG_FUNCTIONALITY
         Debug.Log("Set property \"" + name + "\" to \"" + value + "\" to statechart " + this);
@@ -286,14 +288,14 @@ public class StatechartInstance : MonoBehaviour
 
     public bool GetProperty(string name)
     {
-        properties.TryGetValue(name, out bool value);
+        status.properties.TryGetValue(name, out bool value);
         return value;
     }
 
 
     public bool IsStateActive(string name)
     {
-        foreach (var s in config.activeStates)
+        foreach (var s in status.b_configuration)
             foreach (var a in s.GetSuperstates(null))
                 if (a.ToString().Equals(name))
                     return true;

@@ -26,7 +26,7 @@ public class Statechart : ScriptableObject
     public State Root { get; private set; }
 
     
-    public Configuration Instantiate()
+    public Status Instantiate()
     {
         if (Root == null)
         {
@@ -36,13 +36,16 @@ public class Statechart : ScriptableObject
             ParseStates(doc.LastChild);
             ParseTransitions(doc.LastChild);
         }
-        
-        var start = Root.TryEnter(new Status(new Dictionary<string, bool>(), new HashSet<SCEvent>()));
+
+        var initial = new Status(this, new HashSet<AtomicState>(), new Dictionary<string, bool>(), new HashSet<SCEvent>());
+
+        var start = Root.TryEnter(initial);
         if (start == (null, null))
             throw new System.Exception("The statechart in " + scxml + " could not be initialized.");
 
-        Configuration config = new Configuration(this, start.destinations);
-        return config;
+        initial.b_configuration.UnionWith(start.destinations);
+
+        return initial;
     }
 
 
@@ -129,7 +132,7 @@ public class Statechart : ScriptableObject
     }
 
 
-    public void ParseTransitions(XmlNode node)
+    void ParseTransitions(XmlNode node)
     {
         if (node.Name == "state" 
             || node.Name == "parallel"
