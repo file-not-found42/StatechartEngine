@@ -5,6 +5,7 @@ using UnityEngine;
 public class StatechartEngine : MonoBehaviour
 {
     static StatechartEngine instance = null;
+    static bool dead = false;
 
     readonly IList<StatechartInstance> updateInstances = new List<StatechartInstance>();
     readonly IList<StatechartInstance> lateInstances = new List<StatechartInstance>();
@@ -19,6 +20,9 @@ public class StatechartEngine : MonoBehaviour
     [MethodImpl(MethodImplOptions.Synchronized)]
     static StatechartEngine GetInstance()
     {
+        if (dead)
+            return null;
+
         if (instance == null)
         {
             GameObject obj = new GameObject();
@@ -34,13 +38,13 @@ public class StatechartEngine : MonoBehaviour
         switch(ins.GetMode())
         {
             case Statechart.Mode.Unity_Update:
-                GetInstance().updateInstances.Add(ins);
+                GetInstance()?.updateInstances.Add(ins);
                 break;
             case Statechart.Mode.Unity_Late_Update:
-                GetInstance().lateInstances.Add(ins);
+                GetInstance()?.lateInstances.Add(ins);
                 break;
             case Statechart.Mode.Unity_Fixed_Update:
-                GetInstance().fixedInstances.Add(ins);
+                GetInstance()?.fixedInstances.Add(ins);
                 break;
         }
     }
@@ -51,13 +55,13 @@ public class StatechartEngine : MonoBehaviour
         switch (ins.GetMode())
         {
             case Statechart.Mode.Unity_Update:
-                GetInstance().updateInstances.Remove(ins);
+                GetInstance()?.updateInstances.Remove(ins);
                 break;
             case Statechart.Mode.Unity_Late_Update:
-                GetInstance().lateInstances.Remove(ins);
+                GetInstance()?.lateInstances.Remove(ins);
                 break;
             case Statechart.Mode.Unity_Fixed_Update:
-                GetInstance().fixedInstances.Remove(ins);
+                GetInstance()?.fixedInstances.Remove(ins);
                 break;
         }
     }
@@ -93,5 +97,11 @@ public class StatechartEngine : MonoBehaviour
     {
         foreach (StatechartInstance i in fixedInstances)
             i.SuperStep();
+    }
+
+
+    private void OnApplicationQuit()
+    {
+        dead = true;
     }
 }

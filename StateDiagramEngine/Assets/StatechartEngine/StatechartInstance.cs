@@ -69,7 +69,6 @@ public class StatechartInstance : MonoBehaviour
 #endif
         // Preparations
 
-        status.events.Clear();
 
         var CTs = new List<CT>();
 
@@ -170,20 +169,22 @@ public class StatechartInstance : MonoBehaviour
 #endif
         // Execute Step
 
+        // Update configuration
+        status.b_configuration.ExceptWith(ExtractAtomic(exited));
+        status.b_configuration.UnionWith(ExtractAtomic(entered));
+        // Execute actions
         DoActions(exited, Action.Type.EXIT);
         DoActions(active, Action.Type.STAY);
         foreach (var p in CTs)
             if (p != null)
                 DoActions(p.GetWaypoints(), Action.Type.PASSTHROUGH);
         DoActions(entered, Action.Type.ENTRY);
-
+        // Clear and add events for next step
+        status.events.Clear();
         foreach (var s in exited)
             status.events.Add(new SCEvent("exit." + s.ToString()));
         foreach (var s in entered)
             status.events.Add(new SCEvent("enter." + s.ToString()));
-
-        status.b_configuration.ExceptWith(ExtractAtomic(exited));
-        status.b_configuration.UnionWith(ExtractAtomic(entered));
 
 #if SC_PROFILE_SINGLE
         stopwatch.Stop();
