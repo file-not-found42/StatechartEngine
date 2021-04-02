@@ -4,12 +4,17 @@ using UnityEngine;
 
 public class StatechartInstance : MonoBehaviour
 {
-    readonly Dictionary<Action, EventHandler<ActionArgs>> actions = new Dictionary<Action, EventHandler<ActionArgs>>();
-
-    Status status;
-    
     [SerializeField]
     Statechart machine;
+    
+    Status status;
+    readonly Dictionary<Action, EventHandler<ActionArgs>> actions = new Dictionary<Action, EventHandler<ActionArgs>>();
+
+    List<CT> CTs = new List<CT>();
+    HashSet<State> entered = new HashSet<State>();
+    HashSet<State> exited = new HashSet<State>();
+    HashSet<State> active = new HashSet<State>();
+    HashSet<State> some_states = new HashSet<State>();
 
 #if SC_PROFILE_SINGLE
     System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
@@ -68,13 +73,11 @@ public class StatechartInstance : MonoBehaviour
         stopwatch.Start();
 #endif
         // Preparations
+        CTs.Clear();
+        entered.Clear();
+        exited.Clear();
+        active.Clear();
 
-
-        var CTs = new List<CT>();
-
-        var entered = new HashSet<State>();
-        var exited = new HashSet<State>();
-        var active = new HashSet<State>();
         foreach (var s in status.b_configuration)
             active.UnionWith(s.GetSuperstates(null));
 
@@ -103,7 +106,6 @@ public class StatechartInstance : MonoBehaviour
 
         // Sort by scope high to low
         CTs.Sort();
-
         // Remove conflicting paths by priority
         for (int i = 0; i < CTs.Count; i++)
         {
@@ -120,43 +122,35 @@ public class StatechartInstance : MonoBehaviour
                 CTs[i] = null;
         }
         // Remove any so far untouched parallel regions which have been implicitly exited
+        some_states.Clear();
+        foreach (var act in active)
         {
-            var ToRemove = new HashSet<State>();
-            
-            foreach (var act in active)
-            {
-                var ancestors = act.GetSuperstates(null);
-                ancestors.Reverse();
-                foreach (var a in ancestors)
-                    if (!active.Contains(a))
-                    {
-                        ToRemove.UnionWith(act.GetSuperstates(a));
-                        break;
-                    }
-            }
-
-            active.ExceptWith(ToRemove);
-            exited.UnionWith(ToRemove);
-        }
-        // Implicitly enter all so far untouched parallel regions
-        {
-            var regions = new HashSet<State>();
-            foreach (var e in entered)
-                if (e is ParallelState p)
-                    regions.UnionWith(p.components);
-
-            regions.ExceptWith(active);
-            regions.ExceptWith(entered);
-
-            foreach (var r in regions)
-            {
-                var next = r.TryEnter(status);
-                if (next != (null, null))
+            var ancestors = act.GetSuperstates(null);
+            ancestors.Reverse();
+            foreach (var a in ancestors)
+                if (!active.Contains(a))
                 {
-                    entered.UnionWith(next.destinations);
+                    some_states.UnionWith(act.GetSuperstates(a));
+                    break;
                 }
-                // else: ERROR (Limitation)
+        }
+        active.ExceptWith(some_states);
+        exited.UnionWith(some_states);
+        // Implicitly enter all so far untouched parallel regions
+        some_states.Clear();
+        foreach (var e in entered)
+            if (e is ParallelState p)
+                some_states.UnionWith(p.components);
+        some_states.ExceptWith(active);
+        some_states.ExceptWith(entered);
+        foreach (var r in some_states)
+        {
+            var next = r.TryEnter(status);
+            if (next != (null, null))
+            {
+                entered.UnionWith(next.destinations);
             }
+            // else: ERROR (Limitation)
         }
         // Cleanup
         entered.ExceptWith(active);
