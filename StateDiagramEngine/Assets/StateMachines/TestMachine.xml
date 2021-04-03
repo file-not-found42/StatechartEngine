@@ -15,8 +15,6 @@
             <parallel id="A" initial="I">
                 <transition event="Event_6" cond="is_3" target="IV" priority="0"/>
                 <transition event="Event_6" cond="is_4" target="B" priority="1"/>
-                <transition event="Event_6" cond="is_5" target="III" priority="2"/>
-                <transition event="Event_6" cond="is_6" target="II" priority="3"/>
 
                 <state id="I" initial="2">
                     <state id="1">

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 public class StatechartInstance : MonoBehaviour
@@ -204,7 +205,20 @@ public class StatechartInstance : MonoBehaviour
 
 #if SC_DEBUG
         if (!status.IsValid())
-            Debug.LogError("Invalid configuration in instance " + this + ":\n" + status.ToString());
+        {
+            StringBuilder sb = new StringBuilder("Invalid configuration in instance ");
+            sb.Append(this);
+            sb.Append(":\n\t");
+            sb.Append(status.ToString());
+            sb.Append("\nIt occured while executing:");
+            foreach (var ct in CTs)
+                if(ct != null)
+                {
+                    sb.Append(ct);
+                    sb.Append("\n\t");
+                }
+            Debug.LogError(sb.ToString());
+        }
 #endif
 
         return exited.Count > 0 || entered.Count > 0;
