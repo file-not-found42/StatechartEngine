@@ -24,6 +24,15 @@ public class Status
     }
 
 
+    public Status(Status other)
+    {
+        statechart = other.statechart;
+        b_configuration = new HashSet<AtomicState>(other.b_configuration);
+        properties = new Dictionary<string, bool>(other.properties);
+        events = new HashSet<SCEvent>(other.events);
+    }
+
+
     public bool IsValid()
     {
         return IsValidInternal(statechart.Root) == Valid.Active;
