@@ -8,10 +8,13 @@ public abstract class Node : ISCElement
     // Sorted by priority
     public readonly SortedList<int, Transition> outTransitions = new SortedList<int, Transition>();
 
+    readonly string displayName;
+
 
     public Node(string name, State superstate)
     {
         this.name = name;
+        displayName = superstate == null ? name : superstate.ToString() + "." + name;
         this.superstate = superstate;
     }
     
@@ -30,6 +33,6 @@ public abstract class Node : ISCElement
     
     public override string ToString()
     {
-        return superstate == null ? name : superstate.ToString() + "." + name;
+        return displayName;
     }
 }

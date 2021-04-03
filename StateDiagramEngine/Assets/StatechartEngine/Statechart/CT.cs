@@ -6,6 +6,9 @@ public class CT : System.IComparable<CT>
     readonly ISet<AtomicState> destinations;
     readonly ISet<ISCElement> waypoints;
 
+    State scope;
+    HashSet<State> entered;
+    HashSet<State> exited;
 
     public CT(AtomicState s, ISet<ISCElement> waypoints, ISet<AtomicState> destinations)
     {
@@ -17,11 +20,12 @@ public class CT : System.IComparable<CT>
 
     public ISet<State> GetEntered()
     {
-        var scope = source.GetCommonSuperstate(destinations);
-        var entered = new HashSet<State>();
-
-        foreach (var d in destinations)
-            entered.UnionWith(d.GetSuperstates(scope));
+        if (entered == null)
+        {
+            entered = new HashSet<State>();
+            foreach (var d in destinations)
+                entered.UnionWith(d.GetSuperstates(GetScope()));
+        }
 
         return entered;
     }
@@ -29,26 +33,33 @@ public class CT : System.IComparable<CT>
 
     public ISet<State> GetExited()
     {
-        var scope = source.GetCommonSuperstate(destinations);
+        if (exited == null)
+            exited = new HashSet<State>(source.GetSuperstates(GetScope()));
 
-        return new HashSet<State>(source.GetSuperstates(scope));
+        return exited;
     }
 
 
     public int CompareTo(CT y)
     {
-        var scope = source.GetCommonSuperstate(destinations);
-        var scopeY = y.source.GetCommonSuperstate(y.destinations);
+        var ances = GetScope().GetSuperstates(null);
+        var ancesY = y.GetScope().GetSuperstates(null);
 
-        var ances = scope.GetSuperstates(null);
-        var ancesY = scopeY.GetSuperstates(null);
-
-        if (ances.Contains(scopeY))
+        if (ances.Contains(y.GetScope()))
             return -1;
-        else if (ancesY.Contains(scope))
+        else if (ancesY.Contains(GetScope()))
             return 1;
         else
             return 0;
+    }
+
+
+    public State GetScope()
+    {
+        if (scope == null)
+            scope = source.GetCommonSuperstate(destinations);
+
+        return scope;
     }
 
 
