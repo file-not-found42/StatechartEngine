@@ -1,7 +1,7 @@
-public readonly struct SCEvent
+public readonly struct SCEvent : System.IEquatable<SCEvent>
 {
     public readonly string Type;
-    public static SCEvent emptyEvent = new SCEvent("");
+    public readonly static SCEvent emptyEvent = new SCEvent("");
 
 
     public SCEvent(string newType)
@@ -10,10 +10,16 @@ public readonly struct SCEvent
     }
 
 
-    public override bool Equals(object other)
+    public readonly bool Equals(SCEvent other)
+    {
+        return Type == other.Type;
+    }
+
+
+    public readonly override bool Equals(object other)
     {
         if (other is SCEvent e)
-            return Type == e.Type;
+            return Equals(e);
         else
             return false;
     }
@@ -31,13 +37,13 @@ public readonly struct SCEvent
     }
 
 
-    public override int GetHashCode()
+    public readonly override int GetHashCode()
     {
         return Type.GetHashCode();
     }
 
     
-    public override string ToString()
+    public readonly override string ToString()
     {
         return Type;
     }

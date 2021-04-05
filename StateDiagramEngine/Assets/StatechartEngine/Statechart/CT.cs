@@ -8,8 +8,6 @@ public class CT : System.IComparable<CT>
     readonly ISet<long> waypoints;
 
     int scope = -1;
-    HashSet<int> entered;
-    HashSet<int> exited;
 
     public CT(Statechart statechart, int source, ISet<long> waypoints, ISet<int> destinations)
     {
@@ -20,25 +18,16 @@ public class CT : System.IComparable<CT>
     }
 
 
-    public ISet<int> GetEntered()
+    public void GetEntered(ref HashSet<int> entered)
     {
-        if (entered == null)
-        {
-            entered = new HashSet<int>();
-            foreach (var d in destinations)
-                entered.UnionWith(statechart.GetSuperstates(d, GetScope()));
-        }
-
-        return entered;
+        foreach (var d in destinations)
+            entered.UnionWith(statechart.GetSuperstates(d, GetScope()));
     }
 
 
-    public ISet<int> GetExited()
+    public void GetExited(ref HashSet<int> exited)
     {
-        if (exited == null)
-            exited = new HashSet<int>(statechart.GetSuperstates(source, GetScope()));
-
-        return exited;
+        exited.UnionWith(statechart.GetSuperstates(source, GetScope()));
     }
 
 

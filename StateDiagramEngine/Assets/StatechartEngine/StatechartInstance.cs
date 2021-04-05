@@ -13,6 +13,12 @@ public class StatechartInstance : MonoBehaviour
     [SerializeField]
     Statechart machine;
 
+    readonly List<CT> CTs = new List<CT>(minCapacity);
+    readonly HashSet<int> entered = new HashSet<int>();
+    readonly HashSet<int> exited = new HashSet<int>();
+    readonly HashSet<int> active = new HashSet<int>();
+    HashSet<int> generic = new HashSet<int>();
+
 #if SC_PROFILE_SINGLE
     System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
     AccumulatedTime prepare = new AccumulatedTime();
@@ -72,12 +78,10 @@ public class StatechartInstance : MonoBehaviour
 #endif
         // Preparations
 
-
-        var CTs = new List<CT>(minCapacity);
-
-        var entered = new HashSet<int>();
-        var exited = new HashSet<int>();
-        var active = new HashSet<int>();
+        CTs.Clear();
+        entered.Clear();
+        exited.Clear();
+        active.Clear();
         foreach (var s in status.b_configuration)
             active.UnionWith(machine.GetSuperstates(s));
 
@@ -112,54 +116,51 @@ public class StatechartInstance : MonoBehaviour
         {
             if (active.IsSupersetOf(machine.GetSuperstates(CTs[i].GetSource())))
             {
-                var ct_exits = CTs[i].GetExited();
-                var ct_enters = CTs[i].GetEntered();
+                generic.Clear();
+                CTs[i].GetExited(ref generic);
+                active.ExceptWith(generic);
+                exited.UnionWith(generic);
 
-                active.ExceptWith(ct_exits);
-                exited.UnionWith(ct_exits);
-                entered.UnionWith(ct_enters);
+                generic.Clear();
+                CTs[i].GetEntered(ref generic);
+                entered.UnionWith(generic);
             }
             else
                 CTs[i] = null;
         }
         // Remove any so far untouched parallel regions which have been implicitly exited
+        generic.Clear();
+        foreach (var act in active)
         {
-            var ToRemove = new HashSet<int>();
-            
-            foreach (var act in active)
-            {
-                var ancestors = machine.GetSuperstates(act);
-                ancestors.Reverse();
-                foreach (var a in ancestors)
-                    if (!active.Contains(a))
-                    {
-                        ToRemove.UnionWith(machine.GetSuperstates(act, a));
-                        break;
-                    }
-            }
-
-            active.ExceptWith(ToRemove);
-            exited.UnionWith(ToRemove);
-        }
-        // Implicitly enter all so far untouched parallel regions
-        {
-            var regions = new HashSet<int>();
-            foreach (var e in entered)
-                if (machine.GetNodeType(e) == Node.Type.Parallel)
-                    regions.UnionWith(machine.GetNodeComponents(e));
-
-            regions.ExceptWith(active);
-            regions.ExceptWith(entered);
-
-            foreach (var r in regions)
-            {
-                var next = machine.TryEnter(r, status);
-                if (next != (null, null))
+            var ancestors = machine.GetSuperstates(act);
+            ancestors.Reverse();
+            foreach (var a in ancestors)
+                if (!active.Contains(a))
                 {
-                    entered.UnionWith(next.destinations);
+                    generic.UnionWith(machine.GetSuperstates(act, a));
+                    break;
                 }
-                // else: ERROR (Limitation)
+        }
+
+        active.ExceptWith(generic);
+        exited.UnionWith(generic);
+        // Implicitly enter all so far untouched parallel regions
+        generic.Clear();
+        foreach (var e in entered)
+            if (machine.GetNodeType(e) == Node.Type.Parallel)
+                generic.UnionWith(machine.GetNodeComponents(e));
+
+        generic.ExceptWith(active);
+        generic.ExceptWith(entered);
+
+        foreach (var r in generic)
+        {
+            var next = machine.TryEnter(r, status);
+            if (next != (null, null))
+            {
+                entered.UnionWith(next.destinations);
             }
+            // else: ERROR (Limitation)
         }
         // Cleanup
         entered.ExceptWith(active);
@@ -239,46 +240,23 @@ public class StatechartInstance : MonoBehaviour
 
     void DoActions(IEnumerable<long> waypoints)
     {
-#if SC_LOG_FUNCTIONALITY
-        var sb = new System.Text.StringBuilder();
-#endif
         foreach(var o in waypoints)
         {
-            var action = new Action(machine.GetElementName(o), Action.Type.PASSTHROUGH);
+            var action = new Action(o, Action.Type.PASSTHROUGH);
             if (actions.TryGetValue(action, out EventHandler<ActionArgs> act))
                 act?.Invoke(this, new ActionArgs(o.ToString(), Action.Type.PASSTHROUGH));
-#if SC_LOG_FUNCTIONALITY
-            sb.Append(action);
-            sb.Append(", ");
-#endif
         }
-
-#if SC_LOG_FUNCTIONALITY
-        if (sb.Length > 0)
-            Debug.Log("Executed the following actions:\n" + sb.ToString());
-#endif
     }
+
 
     void DoActions(IEnumerable<int> nodes, Action.Type type)
     {
-#if SC_LOG_FUNCTIONALITY
-        var sb = new System.Text.StringBuilder();
-#endif
         foreach (var o in nodes)
         {
-            var action = new Action(machine.GetNodeName(o), type);
+            var action = new Action(o, type);
             if (actions.TryGetValue(action, out EventHandler<ActionArgs> act))
                 act?.Invoke(this, new ActionArgs(o.ToString(), type));
-#if SC_LOG_FUNCTIONALITY
-            sb.Append(action);
-            sb.Append(", ");
-#endif
         }
-
-#if SC_LOG_FUNCTIONALITY
-        if (sb.Length > 0)
-            Debug.Log("Executed the following actions:\n" + sb.ToString());
-#endif
     }
 
 
@@ -309,7 +287,7 @@ public class StatechartInstance : MonoBehaviour
 
     public void Subscribe(string source, Action.Type type, EventHandler<ActionArgs> function)
     {
-        var key = new Action(source, type);
+        var key = new Action(machine.GetElementByName(source), type);
         if (actions.ContainsKey(key))
             actions[key] += function;
         else
@@ -319,7 +297,7 @@ public class StatechartInstance : MonoBehaviour
 
     public void Unsubscribe(string source, Action.Type type, EventHandler<ActionArgs> function)
     {
-        var key = new Action(source, type);
+        var key = new Action(machine.GetElementByName(source), type);
         if (actions.ContainsKey(key))
             actions[key] -= function;
     }

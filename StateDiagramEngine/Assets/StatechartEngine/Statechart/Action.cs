@@ -1,4 +1,4 @@
-public class Action
+public readonly struct Action : System.IEquatable<Action>
 {
     public enum Type
     {
@@ -9,17 +9,17 @@ public class Action
     }
 
     public readonly Type type;
-    public readonly string source;
+    public readonly long source;
 
 
-    public Action(string source, Type type)
+    public Action(long source, Type type)
     {
         this.source = source;
         this.type = type;
     }
 
     
-    public override string ToString()
+    public readonly override string ToString()
     {
         return type switch
         {
@@ -32,10 +32,16 @@ public class Action
     }
 
 
-    public override bool Equals(object other)
+    public readonly bool Equals(Action other)
+    {
+        return source == other.source && type == other.type;
+    }
+
+
+    public readonly override bool Equals(object other)
     {
         if (other is Action action)
-            return source == action.source && type == action.type;
+            return Equals(action);
         else
             return false;
     }
@@ -53,7 +59,7 @@ public class Action
     }
 
 
-    public override int GetHashCode()
+    public readonly override int GetHashCode()
     {
         return (source.GetHashCode() << 2) + (int)type;
     }

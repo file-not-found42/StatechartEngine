@@ -13,7 +13,8 @@ public class Status
         this.statechart = statechart;
         this.b_configuration = b_configuration;
         this.properties = properties;
-        this.events = new HashSet<SCEvent>();
+        
+        events = new HashSet<SCEvent>();
     }
 
 

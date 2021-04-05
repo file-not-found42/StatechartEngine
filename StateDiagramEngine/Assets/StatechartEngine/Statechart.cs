@@ -34,13 +34,14 @@ public class Statechart : ScriptableObject
     Status initial;
 
     List<Node>       nodes;
-    List<int>               relations;
+    List<int>        relations;
     List<Transition> transitions;
 
-    List<string>            node_to_name;
-    List<string>            transition_to_name;
+    List<string> node_to_name;
+    List<string> transition_to_name;
     
     Dictionary<string, int> name_to_node;
+    Dictionary<string, int> name_to_transition;
     Dictionary<string, int> name_to_property;
 
 
@@ -209,6 +210,17 @@ public class Statechart : ScriptableObject
     }
 
 
+    public long GetElementByName(string name)
+    {
+        if (name_to_node.TryGetValue(name, out int index))
+            return index;
+        else if (name_to_transition.TryGetValue(name, out index))
+            return index + (long)int.MaxValue;
+        else
+            return -1;
+    }
+
+
     public int GetPropertyByName(string name)
     {
         if (name_to_property.TryGetValue(name, out int index))
@@ -327,6 +339,7 @@ public class Statechart : ScriptableObject
         node_to_name = new List<string>();
         name_to_node = new Dictionary<string, int>();
         transition_to_name = new List<string>();
+        name_to_transition = new Dictionary<string, int>();
         name_to_property = new Dictionary<string, int>();
 
         // Load XML into custom RAM structure
@@ -491,6 +504,7 @@ public class Statechart : ScriptableObject
                 node_to_name[name_to_node[node.ParentNode.Attributes["id"].Value]]
                 + "->"
                 + node_to_name[destination]);
+            name_to_transition[transition_to_name[transitions.Count - 1]] = transitions.Count - 1;
         }
         else
         {
