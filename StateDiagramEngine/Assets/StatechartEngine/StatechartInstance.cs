@@ -6,9 +6,9 @@ using UnityEngine;
 public class StatechartInstance : MonoBehaviour
 {
     const int minCapacity = 16;
+    readonly Dictionary<Action, EventHandler<ActionArgs>> actions = new Dictionary<Action, EventHandler<ActionArgs>>();
 
     Status status;
-    readonly Dictionary<Action, EventHandler<ActionArgs>> actions = new Dictionary<Action, EventHandler<ActionArgs>>();
     
     [SerializeField]
     Statechart machine;
@@ -26,7 +26,6 @@ public class StatechartInstance : MonoBehaviour
     AccumulatedTime validate = new AccumulatedTime();
     AccumulatedTime execute = new AccumulatedTime();
 #endif
-
 
     public void Initialize(Statechart chart)
     {
@@ -147,7 +146,7 @@ public class StatechartInstance : MonoBehaviour
         // Implicitly enter all so far untouched parallel regions
         generic.Clear();
         foreach (var e in entered)
-            if (machine.GetNodeType(e) == Node.Type.Parallel)
+            if (machine.GetNodeType(e) == CompactNode.Type.Parallel)
                 generic.UnionWith(machine.GetNodeComponents(e));
 
         generic.ExceptWith(active);
@@ -265,7 +264,7 @@ public class StatechartInstance : MonoBehaviour
         var result = new HashSet<int>();
 
         foreach (var s in source)
-            if (machine.GetNodeType(s) == Node.Type.Basic)
+            if (machine.GetNodeType(s) == CompactNode.Type.Basic)
                 result.Add(s);
 
         return result;
@@ -305,11 +304,7 @@ public class StatechartInstance : MonoBehaviour
 
     public void SetProperty(string name, bool value)
     {
-        var prop = machine.GetPropertyByName(name);
-        if (prop != -1)
-            status.properties[prop] = value;
-        else
-            Debug.LogError("Property \"" + name + "\" does not exist.");
+        status.properties[name] = value;
 
 #if SC_LOG_FUNCTIONALITY
         Debug.Log("Set property \"" + name + "\" to \"" + value + "\" to statechart " + this);
@@ -319,14 +314,8 @@ public class StatechartInstance : MonoBehaviour
 
     public bool GetProperty(string name)
     {
-        var prop = machine.GetPropertyByName(name);
-        if (prop != -1)
-            return status.properties[prop];
-        else
-        {
-            Debug.LogError("Property \"" + name + "\" does not exist.");
-            return false;
-        }
+        status.properties.TryGetValue(name, out bool value);
+        return value;
     }
 
 

@@ -33,17 +33,14 @@ public class Statechart : ScriptableObject
     
     Status initial;
 
-    List<Node>       nodes;
-    List<int>        relations;
-    List<Transition> transitions;
+    List<CompactNode>       nodes;
+    List<int>               relations;
+    List<CompactTransition> transitions;
 
     List<string> node_to_name;
     List<string> transition_to_name;
-    
     Dictionary<string, int> name_to_node;
     Dictionary<string, int> name_to_transition;
-    Dictionary<string, int> name_to_property;
-
 
     public Status Instantiate()
     {
@@ -51,7 +48,7 @@ public class Statechart : ScriptableObject
         {
             LoadStatechart();
 
-            initial = new Status(this, new HashSet<int>(), new List<bool>(new bool[name_to_property.Count]));
+            initial = new Status(this, new HashSet<int>(), new Dictionary<string, bool>());
 
             var start = TryEnter(0, initial);
             if (start == (null, null))
@@ -90,9 +87,9 @@ public class Statechart : ScriptableObject
     {
         switch (nodes[node].type)
         {
-            case Node.Type.Compound:
+            case CompactNode.Type.Compound:
                 return TryEnter(nodes[node].data, snap);
-            case Node.Type.Parallel:
+            case CompactNode.Type.Parallel:
                 var result = (new HashSet<int>(), new HashSet<long>());
                 for (int i = nodes[node].components; 
                     i < nodes[node+1].components; 
@@ -107,9 +104,9 @@ public class Statechart : ScriptableObject
                     result.Item2.UnionWith(next.waypoints);
                 }
                 return result;
-            case Node.Type.Basic:
+            case CompactNode.Type.Basic:
                 return (new HashSet<int>() { node }, new HashSet<long>());
-            case Node.Type.Pseudo:
+            case CompactNode.Type.Pseudo:
                 for (int i = nodes[node].transitions;
                     i < nodes[node+1].transitions;
                     i++)
@@ -131,13 +128,12 @@ public class Statechart : ScriptableObject
 
     public (HashSet<int> destinations, HashSet<long> waypoints) TryThrough(int trans, Status snap)
     {
-        bool active = true;
-
-        if (transitions[trans].trigger != SCEvent.emptyEvent)
-            active = snap.ContainsEvent(transitions[trans].trigger);
-        
-        if (active && !transitions[trans].guard.IsEmpty()) 
-            active = transitions[trans].guard.Evaluate(snap.properties[transitions[trans].guard.property]);
+        bool active = (
+                   transitions[trans].guard == null 
+                || transitions[trans].guard.Evaluate(snap))
+            && 
+                  (transitions[trans].trigger == SCEvent.emptyEvent 
+                || snap.ContainsEvent(transitions[trans].trigger));
 
         if (!active)
             return (null, null);
@@ -180,7 +176,7 @@ public class Statechart : ScriptableObject
     }
 
 
-    public Node.Type GetNodeType(int node)
+    public CompactNode.Type GetNodeType(int node)
     {
         return nodes[node].type;
     }
@@ -221,15 +217,6 @@ public class Statechart : ScriptableObject
     }
 
 
-    public int GetPropertyByName(string name)
-    {
-        if (name_to_property.TryGetValue(name, out int index))
-            return index;
-        else
-            return -1;
-    }
-
-
     public ISet<int> GetNodeComponents(int node)
     {
         var result = new HashSet<int>();
@@ -253,22 +240,6 @@ public class Statechart : ScriptableObject
     }
 
 
-    public string PropertiesToString(Status status)
-    {
-        var sb = new System.Text.StringBuilder();
-
-        foreach(var pair in name_to_property)
-        {
-            sb.Append(pair.Key);
-            sb.Append(" = ");
-            sb.Append(status.properties[pair.Value]);
-            sb.Append(", ");
-        }
-
-        return sb.ToString();
-    }
-
-
     public bool IsValid(Status status)
     {
         return IsValidInternal(0, status) == Valid.Active;
@@ -280,7 +251,7 @@ public class Statechart : ScriptableObject
         long count = 0;
         switch (nodes[subtree].type)
         {
-            case Node.Type.Compound:
+            case CompactNode.Type.Compound:
                 for (int i = nodes[subtree].components; i < nodes[subtree+1].components; i++)
                     switch (IsValidInternal(relations[i], status))
                     {
@@ -297,7 +268,7 @@ public class Statechart : ScriptableObject
                     return Valid.Active;
                 else
                     return Valid.Error;
-            case Node.Type.Parallel:
+            case CompactNode.Type.Parallel:
                 for (int i = nodes[subtree].components; i < nodes[subtree + 1].components; i++)
                     switch (IsValidInternal(relations[i], status))
                     {
@@ -314,7 +285,7 @@ public class Statechart : ScriptableObject
                     return Valid.Active;
                 else
                     return Valid.Error;
-            case Node.Type.Basic:
+            case CompactNode.Type.Basic:
                 return status.b_configuration.Contains(subtree) ? Valid.Active : Valid.Inactive;
             default:
                 return Valid.Error;
@@ -333,14 +304,13 @@ public class Statechart : ScriptableObject
         var doc = new XmlDocument();
 
         // Allocate data structures
-        nodes = new List<Node>();
-        transitions = new List<Transition>();
+        nodes = new List<CompactNode>();
+        transitions = new List<CompactTransition>();
         relations = new List<int>();
         node_to_name = new List<string>();
         name_to_node = new Dictionary<string, int>();
         transition_to_name = new List<string>();
         name_to_transition = new Dictionary<string, int>();
-        name_to_property = new Dictionary<string, int>();
 
         // Load XML into custom RAM structure
         doc.LoadXml(scxml.text);
@@ -349,7 +319,7 @@ public class Statechart : ScriptableObject
         ParseTransitions(doc.LastChild);
 
         // Add closing state to nodes
-        nodes.Add(new Node(Node.Type.Error, -1, 0, 0, 0));
+        nodes.Add(new CompactNode(CompactNode.Type.Error, -1, 0, 0, 0));
 
         // Minimize
         nodes.TrimExcess();
@@ -367,7 +337,7 @@ public class Statechart : ScriptableObject
             || node.Name == "pseudo")
         {
             name_to_node[node.Attributes["id"].Value] = nodes.Count;
-            nodes.Add(new Node(Node.Type.Error, -1, -1, -1, -1));
+            nodes.Add(new CompactNode(CompactNode.Type.Error, -1, -1, -1, -1));
 
             foreach (XmlNode n in node.ChildNodes)
                 ParseStates(n);
@@ -408,19 +378,19 @@ public class Statechart : ScriptableObject
             int data = 0;
 
             // Type
-            Node.Type type = Node.Type.Error;
+            CompactNode.Type type = CompactNode.Type.Error;
             if (components_start == relations.Count)
             {
                 if (node.Name == "state")
-                    type = Node.Type.Basic;
+                    type = CompactNode.Type.Basic;
                 else if (node.Name == "pseudo")
-                    type = Node.Type.Pseudo;
+                    type = CompactNode.Type.Pseudo;
             }
             else
             {
                 if (node.Name == "state")
                 {
-                    type = Node.Type.Compound;
+                    type = CompactNode.Type.Compound;
 
                     if (node.Attributes["initial"] == null)
                         Debug.LogError("Missing default state of " + state_name + " in " + scxml.name);
@@ -428,7 +398,7 @@ public class Statechart : ScriptableObject
                         Debug.LogError("The default state of " + state_name + " in " + scxml.name + " does not exist.");
                 }
                 else if (node.Name == "parallel")
-                    type = Node.Type.Parallel;
+                    type = CompactNode.Type.Parallel;
             }
 
             // Name
@@ -438,7 +408,7 @@ public class Statechart : ScriptableObject
                 node_to_name.Add(state_name);
             name_to_node[node_to_name[index]] = index;
             
-            nodes[index] = new Node(type, superstate, components_start, data, 0);
+            nodes[index] = new CompactNode(type, superstate, components_start, data, 0);
             
             foreach (XmlNode n in node.ChildNodes)
                 ParseRelations(n);
@@ -451,7 +421,6 @@ public class Statechart : ScriptableObject
         }
     }
 
-
     void ParseTransitions(XmlNode node)
     {
         if (node.Name == "state"
@@ -463,7 +432,7 @@ public class Statechart : ScriptableObject
             // Transitions
             int transitions_start = transitions.Count;
 
-            nodes[index] = new Node(nodes[index].type, 
+            nodes[index] = new CompactNode(nodes[index].type, 
                 nodes[index].superstate, 
                 nodes[index].components, 
                 nodes[index].data, 
@@ -483,23 +452,13 @@ public class Statechart : ScriptableObject
 
             var trigger = new SCEvent(node.Attributes["event"].Value);
 
-            Guard guard = new Guard(-1);
+            Guard guard = null;
             if (node.Attributes["cond"] != null)
-            {
-                var guard_info = ParseGuard(node.Attributes["cond"].Value);
-
-                if (!name_to_property.TryGetValue(guard_info, out int property))
-                {
-                    property = name_to_property.Count;
-                    name_to_property[guard_info] = property;
-                }
-
-                guard = new Guard(property);
-            }
+                guard = new Guard(node.Attributes["cond"].Value);
 
             int destination = name_to_node[node.Attributes["target"].Value];
 
-            transitions.Add(new Transition(trigger, guard, destination));
+            transitions.Add(new CompactTransition(trigger, guard, destination));
             transition_to_name.Add(
                 node_to_name[name_to_node[node.ParentNode.Attributes["id"].Value]]
                 + "->"
@@ -510,11 +469,5 @@ public class Statechart : ScriptableObject
         {
             Debug.LogError("Error: Unsupported XML name in statechart document: \"" + node.Name + "\"");
         }
-    }
-
-
-    string ParseGuard(string expression)
-    {
-        return expression;
     }
 }

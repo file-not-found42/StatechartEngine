@@ -1,23 +1,22 @@
-public readonly struct Guard
+public class Guard
 {
-    // Index of the property
-    public readonly int property;
+    readonly string property;
 
 
-    public Guard(int property)
+    public Guard(string expression)
     {
-        this.property = property;
+        property = expression;
     }
 
 
-    public bool Evaluate(bool prop_value)
+    public bool Evaluate(Status snap)
     {     
-        return prop_value;
+        return snap.GetProperty(property);
     }
 
 
-    public bool IsEmpty()
+    public bool isEmpty()
     {
-        return property < 0;
+        return property == null || property == "";
     }
 }
