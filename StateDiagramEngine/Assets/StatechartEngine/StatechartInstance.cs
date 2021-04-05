@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class StatechartInstance : MonoBehaviour
 {
+    const int minCapacity = 16;
 
     Status status;
     readonly Dictionary<Action, EventHandler<ActionArgs>> actions = new Dictionary<Action, EventHandler<ActionArgs>>();
@@ -72,7 +73,7 @@ public class StatechartInstance : MonoBehaviour
         // Preparations
 
 
-        var CTs = new List<CT>();
+        var CTs = new List<CT>(minCapacity);
 
         var entered = new HashSet<int>();
         var exited = new HashSet<int>();

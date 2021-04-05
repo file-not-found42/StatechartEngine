@@ -1,4 +1,4 @@
-public class SCEvent
+public readonly struct SCEvent
 {
     public readonly string Type;
     public static SCEvent emptyEvent = new SCEvent("");
@@ -12,8 +12,8 @@ public class SCEvent
 
     public override bool Equals(object other)
     {
-        if (other is SCEvent @event)
-            return Type == @event.Type;
+        if (other is SCEvent e)
+            return Type == e.Type;
         else
             return false;
     }

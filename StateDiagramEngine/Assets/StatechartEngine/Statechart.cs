@@ -22,6 +22,8 @@ public class Statechart : ScriptableObject
         Error
     }
 
+    const int minCapacity = 16;
+
     [SerializeField]
     TextAsset scxml = null;
     [SerializeField]
@@ -151,9 +153,9 @@ public class Statechart : ScriptableObject
     public List<int> GetSuperstates(int state, int limit = -1)
     {
         if (state == limit)
-            return new List<int> { };
+            return new List<int>(minCapacity);
         else if (state == 0)
-            return new List<int> { state };
+            return new List<int>(minCapacity) { state };
         else
         {
             var result = GetSuperstates(nodes[state].superstate, limit);
