@@ -2,39 +2,41 @@ using System.Collections.Generic;
 
 public class CT : System.IComparable<CT>
 {
-    readonly AtomicState source;
-    readonly ISet<AtomicState> destinations;
-    readonly ISet<ISCElement> waypoints;
+    readonly Statechart statechart;
+    readonly int source;
+    readonly ISet<int> destinations;
+    readonly ISet<long> waypoints;
 
-    State scope;
-    HashSet<State> entered;
-    HashSet<State> exited;
+    int scope = -1;
+    HashSet<int> entered;
+    HashSet<int> exited;
 
-    public CT(AtomicState s, ISet<ISCElement> waypoints, ISet<AtomicState> destinations)
+    public CT(Statechart statechart, int source, ISet<long> waypoints, ISet<int> destinations)
     {
-        source = s;
+        this.statechart = statechart;
+        this.source = source;
         this.waypoints = waypoints;
         this.destinations = destinations;
     }
 
 
-    public ISet<State> GetEntered()
+    public ISet<int> GetEntered()
     {
         if (entered == null)
         {
-            entered = new HashSet<State>();
+            entered = new HashSet<int>();
             foreach (var d in destinations)
-                entered.UnionWith(d.GetSuperstates(GetScope()));
+                entered.UnionWith(statechart.GetSuperstates(d, GetScope()));
         }
 
         return entered;
     }
 
 
-    public ISet<State> GetExited()
+    public ISet<int> GetExited()
     {
         if (exited == null)
-            exited = new HashSet<State>(source.GetSuperstates(GetScope()));
+            exited = new HashSet<int>(statechart.GetSuperstates(source, GetScope()));
 
         return exited;
     }
@@ -42,8 +44,8 @@ public class CT : System.IComparable<CT>
 
     public int CompareTo(CT y)
     {
-        var ances = GetScope().GetSuperstates(null);
-        var ancesY = y.GetScope().GetSuperstates(null);
+        var ances = statechart.GetSuperstates(GetScope());
+        var ancesY = statechart.GetSuperstates(y.GetScope());
 
         if (ances.Contains(y.GetScope()))
             return -1;
@@ -54,22 +56,22 @@ public class CT : System.IComparable<CT>
     }
 
 
-    public State GetScope()
+    public int GetScope()
     {
-        if (scope == null)
-            scope = source.GetCommonSuperstate(destinations);
+        if (scope == -1)
+            scope = statechart.GetCommonSuperstate(new List<int>(destinations) { source });
 
         return scope;
     }
 
 
-    public AtomicState GetSource()
+    public int GetSource()
     {
         return source;
     }
 
 
-    public ICollection<ISCElement> GetWaypoints()
+    public ICollection<long> GetWaypoints()
     {
         return waypoints;
     }
@@ -77,17 +79,17 @@ public class CT : System.IComparable<CT>
 
     public override string ToString()
     {
-        var sb = new System.Text.StringBuilder(source.ToString());
+        var sb = new System.Text.StringBuilder(statechart.GetNodeName(source));
         sb.Append("--[");
         foreach (var s in waypoints)
         {
-            sb.Append(s.ToString());
+            sb.Append(statechart.GetElementName(s));
             sb.Append(", ");
         }
         sb.Append("]->(");
         foreach (var s in destinations)
         {
-            sb.Append(s.ToString());
+            sb.Append(statechart.GetNodeName(s));
             sb.Append(", ");
         }
         sb.Append(")");

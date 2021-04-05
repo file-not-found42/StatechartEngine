@@ -73,11 +73,11 @@ public class StatechartInstance : MonoBehaviour
 
         var CTs = new List<CT>();
 
-        var entered = new HashSet<State>();
-        var exited = new HashSet<State>();
-        var active = new HashSet<State>();
+        var entered = new HashSet<int>();
+        var exited = new HashSet<int>();
+        var active = new HashSet<int>();
         foreach (var s in status.b_configuration)
-            active.UnionWith(s.GetSuperstates(null));
+            active.UnionWith(machine.GetSuperstates(s));
 
 #if SC_PROFILE_SINGLE
         stopwatch.Stop();
@@ -87,11 +87,11 @@ public class StatechartInstance : MonoBehaviour
 #endif
         // Search Paths
 
-        foreach (AtomicState s in status.b_configuration)
+        foreach (var s in status.b_configuration)
         {   
-            var next = s.TryExit(status);
+            var next = machine.TryExit(s, status);
             if (next != (null, null))
-                CTs.Add(new CT(s, next.waypoints, next.destinations));
+                CTs.Add(new CT(machine, s, next.waypoints, next.destinations));
         }
 
 #if SC_PROFILE_SINGLE
@@ -108,7 +108,7 @@ public class StatechartInstance : MonoBehaviour
         // Remove conflicting paths by priority
         for (int i = 0; i < CTs.Count; i++)
         {
-            if (active.IsSupersetOf(CTs[i].GetSource().GetSuperstates(null)))
+            if (active.IsSupersetOf(machine.GetSuperstates(CTs[i].GetSource())))
             {
                 var ct_exits = CTs[i].GetExited();
                 var ct_enters = CTs[i].GetEntered();
@@ -122,16 +122,16 @@ public class StatechartInstance : MonoBehaviour
         }
         // Remove any so far untouched parallel regions which have been implicitly exited
         {
-            var ToRemove = new HashSet<State>();
+            var ToRemove = new HashSet<int>();
             
             foreach (var act in active)
             {
-                var ancestors = act.GetSuperstates(null);
+                var ancestors = machine.GetSuperstates(act);
                 ancestors.Reverse();
                 foreach (var a in ancestors)
                     if (!active.Contains(a))
                     {
-                        ToRemove.UnionWith(act.GetSuperstates(a));
+                        ToRemove.UnionWith(machine.GetSuperstates(act, a));
                         break;
                     }
             }
@@ -141,17 +141,17 @@ public class StatechartInstance : MonoBehaviour
         }
         // Implicitly enter all so far untouched parallel regions
         {
-            var regions = new HashSet<State>();
+            var regions = new HashSet<int>();
             foreach (var e in entered)
-                if (e is ParallelState p)
-                    regions.UnionWith(p.components);
+                if (machine.GetNodeType(e) == CompactNode.Type.Parallel)
+                    regions.UnionWith(machine.GetNodeComponents(e));
 
             regions.ExceptWith(active);
             regions.ExceptWith(entered);
 
             foreach (var r in regions)
             {
-                var next = r.TryEnter(status);
+                var next = machine.TryEnter(r, status);
                 if (next != (null, null))
                 {
                     entered.UnionWith(next.destinations);
@@ -178,14 +178,14 @@ public class StatechartInstance : MonoBehaviour
         DoActions(active, Action.Type.STAY);
         foreach (var p in CTs)
             if (p != null)
-                DoActions(p.GetWaypoints(), Action.Type.PASSTHROUGH);
+                DoActions(p.GetWaypoints());
         DoActions(entered, Action.Type.ENTRY);
         // Clear and add events for next step
         status.events.Clear();
         foreach (var s in exited)
-            status.events.Add(new SCEvent("exit." + s.ToString()));
+            status.events.Add(new SCEvent("exit." + machine.GetNodeName(s)));
         foreach (var s in entered)
-            status.events.Add(new SCEvent("enter." + s.ToString()));
+            status.events.Add(new SCEvent("enter." + machine.GetNodeName(s)));
 
 #if SC_PROFILE_SINGLE
         stopwatch.Stop();
@@ -200,11 +200,21 @@ public class StatechartInstance : MonoBehaviour
 #endif
 
 #if SC_LOG_FUNCTIONALITY
-        Debug.Log(this + " is now in " + status.ToString());
+        StringBuilder builder = new StringBuilder(this.ToString());
+        builder.Append(" is now in\n");
+        builder.Append(status.ToString());
+        builder.Append("\nafter executing\n");
+        foreach (var ct in CTs)
+            if (ct != null)
+            {
+                builder.Append(ct);
+                builder.Append("\n\t");
+            }
+        Debug.Log(builder.ToString());
 #endif
 
 #if SC_DEBUG
-        if (!status.IsValid())
+        if (!machine.IsValid(status))
         {
             StringBuilder sb = new StringBuilder("Invalid configuration in instance ");
             sb.Append(this);
@@ -225,14 +235,36 @@ public class StatechartInstance : MonoBehaviour
     }
 
 
-    void DoActions(IEnumerable<ISCElement> sources, Action.Type type)
+    void DoActions(IEnumerable<long> waypoints)
     {
 #if SC_LOG_FUNCTIONALITY
         var sb = new System.Text.StringBuilder();
 #endif
-        foreach(var o in sources)
+        foreach(var o in waypoints)
         {
-            var action = new Action(o.ToString(), type);
+            var action = new Action(machine.GetElementName(o), Action.Type.PASSTHROUGH);
+            if (actions.TryGetValue(action, out EventHandler<ActionArgs> act))
+                act?.Invoke(this, new ActionArgs(o.ToString(), Action.Type.PASSTHROUGH));
+#if SC_LOG_FUNCTIONALITY
+            sb.Append(action);
+            sb.Append(", ");
+#endif
+        }
+
+#if SC_LOG_FUNCTIONALITY
+        if (sb.Length > 0)
+            Debug.Log("Executed the following actions:\n" + sb.ToString());
+#endif
+    }
+
+    void DoActions(IEnumerable<int> nodes, Action.Type type)
+    {
+#if SC_LOG_FUNCTIONALITY
+        var sb = new System.Text.StringBuilder();
+#endif
+        foreach (var o in nodes)
+        {
+            var action = new Action(machine.GetNodeName(o), type);
             if (actions.TryGetValue(action, out EventHandler<ActionArgs> act))
                 act?.Invoke(this, new ActionArgs(o.ToString(), type));
 #if SC_LOG_FUNCTIONALITY
@@ -248,13 +280,13 @@ public class StatechartInstance : MonoBehaviour
     }
 
 
-    HashSet<AtomicState> ExtractAtomic(ISet<State> source)
+    HashSet<int> ExtractAtomic(ISet<int> source)
     {
-        var result = new HashSet<AtomicState>();
+        var result = new HashSet<int>();
 
         foreach (var s in source)
-            if (s is AtomicState a)
-                result.Add(a);
+            if (machine.GetNodeType(s) == CompactNode.Type.Basic)
+                result.Add(s);
 
         return result;
     }
@@ -310,9 +342,11 @@ public class StatechartInstance : MonoBehaviour
 
     public bool IsStateActive(string name)
     {
+        int state = machine.GetNodeByName(name);
+
         foreach (var s in status.b_configuration)
-            foreach (var a in s.GetSuperstates(null))
-                if (a.ToString().Equals(name))
+            foreach (var a in machine.GetSuperstates(s))
+                if (a == state)
                     return true;
 
         return false;
