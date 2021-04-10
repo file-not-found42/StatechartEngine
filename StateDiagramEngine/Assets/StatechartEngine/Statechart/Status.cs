@@ -5,10 +5,10 @@ public class Status
     public readonly Statechart statechart;
     public readonly HashSet<int> b_configuration;
     public readonly HashSet<SCEvent> events;
-    public readonly Dictionary<string, bool> properties;
+    public readonly List<bool> properties;
 
 
-    public Status(Statechart statechart, HashSet<int> b_configuration, Dictionary<string, bool> properties)
+    public Status(Statechart statechart, HashSet<int> b_configuration, List<bool> properties)
     {
         this.statechart = statechart;
         this.b_configuration = b_configuration;
@@ -22,15 +22,14 @@ public class Status
     {
         statechart = other.statechart;
         b_configuration = new HashSet<int>(other.b_configuration);
-        properties = new Dictionary<string, bool>(other.properties);
+        properties = new List<bool>(other.properties);
         events = new HashSet<SCEvent>(other.events);
     }
 
 
-    public bool GetProperty(string name)
+    public bool GetProperty(int property)
     {
-        properties.TryGetValue(name, out bool value);
-        return value;
+        return properties[property];
     }
 
 
@@ -56,11 +55,7 @@ public class Status
             sb.Append(", ");
         }
         sb.Append(");Properties{");
-        foreach (var s in properties)
-        {
-            sb.Append(s.ToString());
-            sb.Append(", ");
-        }
+        sb.Append(statechart.PropertiesToString(this));
         sb.Append("}");
         return sb.ToString();
     }

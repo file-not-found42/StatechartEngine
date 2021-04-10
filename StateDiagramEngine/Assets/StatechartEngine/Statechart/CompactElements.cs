@@ -1,4 +1,4 @@
-public readonly struct CompactNode
+public readonly struct Node
 {
     public enum Type
     {
@@ -22,7 +22,7 @@ public readonly struct CompactNode
     public readonly int data;
 
 
-    public CompactNode(Type type, int superstate, int components, int data, int transitions)
+    public Node(Type type, int superstate, int components, int data, int transitions)
     {
         this.type = type;
         this.superstate = superstate;
@@ -33,7 +33,7 @@ public readonly struct CompactNode
 }
 
 
-public readonly struct CompactTransition
+public readonly struct Transition
 {
     public readonly SCEvent trigger;
     public readonly Guard guard;
@@ -41,7 +41,7 @@ public readonly struct CompactTransition
     public readonly int destination;
 
 
-    public CompactTransition(SCEvent trigger, Guard guard, int destination)
+    public Transition(SCEvent trigger, Guard guard, int destination)
     {
         this.trigger = trigger;
         this.guard = guard;
